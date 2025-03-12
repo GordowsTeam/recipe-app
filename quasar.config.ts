@@ -37,7 +37,6 @@ export default defineConfig((ctx) => {
         browser: ['es2022', 'firefox115', 'chrome115', 'safari14'],
         node: 'node20',
       },
-
       typescript: {
         strict: true,
         vueShim: true,
@@ -51,7 +50,7 @@ export default defineConfig((ctx) => {
 
       // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
-      // publicPath: '/',
+      publicPath: '/spa/',
       // analyze: true,
       // env: {},
       // rawDefine: {}
