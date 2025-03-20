@@ -15,6 +15,10 @@ jobs:
       - name: checkout
         uses: actions/checkout@v3
 
+      - name: Crear .env para producción
+        run: |
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> .env
+
       - uses: actions/setup-node@v3
         with:
           node-version: 22.13.x
