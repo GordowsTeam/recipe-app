@@ -52,7 +52,9 @@ export default defineConfig((ctx) => {
 
       publicPath: '/spa/',
       // analyze: true,
-      // env: {},
+      env: {
+        API_URL: process.env.VITE_API_URL,
+      },
       // rawDefine: {}
       // ignorePublicFolder: true,
       // minify: false,
