@@ -4,13 +4,14 @@
     :ingredientes="listaIngredientes"
     @send-delete-ingredient="removeIngredient"
   ></recipe-search-ingredients-table>
-  <q-btn label="Obtener Recetas" color="secondary" class="q-mt-md" @click="getRecipe" />
+  <q-btn label="Obtener Recetas" color="secondary" class="q-mt-md" @click="getRecipe" :disabled="isButtonDisabled" />
+  <q-spinner v-if="loading" size="50px" color="primary" class="q-mt-md" />
   <recipe-list v-if="recipes.length" :recipes="recipes"></recipe-list>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
-import { Notify } from 'quasar'
+import { ref, computed } from 'vue'
+import { Notify, QSpinner } from 'quasar'
 import type { Ingredient } from './RecipeSearchForm.vue'
 import RecipeSearchForm from './RecipeSearchForm.vue'
 import RecipeSearchIngredientsTable from './RecipeSearchIngredientsTable.vue'
@@ -20,6 +21,8 @@ import RecipeList from './RecipeList.vue'
 const listaIngredientes = ref<Ingredient[]>([])
 const apiResponse = ref<object | null>()
 const recipes = ref<Recipe[]>([])
+const loading = ref(false)
+const isButtonDisabled = computed(() => listaIngredientes.value.length === 0)
 
 const addIngredient = (ingredient: Ingredient) => {
   listaIngredientes.value.push(ingredient)
@@ -32,8 +35,9 @@ const removeIngredient = (name: string) => {
 }
 
 const getRecipe = async () => {
+  loading.value = true
   try {
-    const url = 'https://localhost:56548'
+    const url = process.env.RECIPE_API_URL
     const endpoint = 'api/recipe'
     const request = { ingredients: listaIngredientes.value.map((item) => item.name) }
     const response = await fetch(`${url}/${endpoint}`, {
@@ -47,11 +51,11 @@ const getRecipe = async () => {
     }
     const data = await response.json()
     apiResponse.value = data
-    recipes.value = data || [] // Assuming the API returns a 'recipes' field
-    
+    recipes.value = data || []
     console.log(apiResponse)
   } catch (error) {
     console.error(error)
   }
+  loading.value = false
 }
 </script>
