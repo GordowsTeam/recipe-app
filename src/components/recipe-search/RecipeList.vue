@@ -2,7 +2,7 @@
     <div>
       <div class="recipe-list">
         <q-card v-for="recipe in paginatedRecipes" :key="recipe.name" class="recipe-card q-mb-md">
-            <q-card-section horizontal @click="viewRecipe(recipe.name)">
+            <q-card-section horizontal @click="viewRecipe(recipe)">
                 <q-img v-if="recipe.images && recipe.images.length > 0" :src="recipe.images.find(image => image.main)?.url" alt="Recipe Image" class="q-mb-md reduced-img col clickable-img" >
                     <div class="absolute-bottom">
                         <div class="text-h6">{{ recipe.name }}</div>
@@ -20,43 +20,52 @@
     </div>
 </template>
   
-  <script lang="ts" setup>
-  import { ref, computed } from 'vue'
-  import { defineProps } from 'vue'
-  import type { Recipe } from '../../interfaces/RecipeResponse'
-  
-  const props = defineProps<{
-    recipes: Recipe[]
-  }>()
-  
-  const currentPage = ref(1)
-  const itemsPerPage = 6
-  
-  const totalPages = computed(() => Math.ceil(props.recipes.length / itemsPerPage))
-  
-  const paginatedRecipes = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage
-    const end = start + itemsPerPage
-    return props.recipes.slice(start, end)
-  })
-  
-  const viewRecipe = (name: string) => {
-    console.log(`Viewing recipe with name: ${name}`)
-  }
-  </script>
-  
-  <style scoped>
+<script lang="ts" setup>
+import { ref, computed } from 'vue'
+import { defineProps } from 'vue'
+import { useRouter } from 'vue-router'
+import type { Recipe } from '../../interfaces/RecipeResponse'
+
+const router = useRouter()
+
+const props = defineProps<{
+  recipes: Recipe[]
+}>()
+
+const currentPage = ref(1)
+const itemsPerPage = 6
+
+const totalPages = computed(() => Math.ceil(props.recipes.length / itemsPerPage))
+
+const paginatedRecipes = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return props.recipes.slice(start, end)
+})
+
+const viewRecipe = (recipe: Recipe) => {
+  router.push({ name: 'recipe-detail', params: { id: recipe.id } })
+}
+</script>
+
+<style scoped>
 .recipe-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px; /* Adjust the gap between cards as needed */
+  gap: 16px;
   padding: 16px;
   justify-content: center;
 }
 
 .recipe-card {
-  flex: 1 1 calc(33.333% - 16px); /* Adjust the width of the cards */
+  flex: 1 1 calc(33.333% - 16px);
   box-sizing: border-box;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.recipe-card:hover {
+  transform: translateY(-5px);
 }
 
 .q-card {
@@ -66,18 +75,17 @@
 
 .reduced-img {
   width: 300px;
-  height: 300px; /* Adjust the height as needed */
+  height: 300px;
   object-fit: cover;
 }
 
 .clickable-img {
-  cursor: pointer; /* Change cursor to pointer on hover */
+  cursor: pointer;
 }
 
-/* Media queries for responsiveness */
 @media (max-width: 768px) {
   .recipe-card {
-    flex: 1 1 calc(100% - 16px); /* 1 card per row for small screens (cellphones) */
+    flex: 1 1 calc(100% - 16px);
   }
 }
-  </style>
+</style>
