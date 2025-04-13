@@ -23,10 +23,10 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue'
 import { defineProps } from 'vue'
-import { useRouter } from 'vue-router'
+//import { useRouter } from 'vue-router'
 import type { Recipe } from '../../interfaces/RecipeResponse'
 
-const router = useRouter()
+//const router = useRouter()
 
 const props = defineProps<{
   recipes: Recipe[]
@@ -44,7 +44,8 @@ const paginatedRecipes = computed(() => {
 })
 
 const viewRecipe = (recipe: Recipe) => {
-  router.push({ name: 'recipe-detail', params: { id: recipe.id } })
+  //router.push({ name: 'recipe-detail', params: { id: recipe.id } })
+  console.log(recipe)
 }
 </script>
 
