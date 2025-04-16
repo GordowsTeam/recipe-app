@@ -37,9 +37,11 @@ const removeIngredient = (name: string) => {
 const getRecipe = async () => {
   loading.value = true
   try {
-    const url = process.env.RECIPE_API_URL
+    const url = import.meta.env.VITE_API_URL
     const endpoint = 'api/recipe'
-    const request = { ingredients: listaIngredientes.value.map((item) => item.name) }
+    debugger
+    const ingredients = listaIngredientes.value.map((item) => item.name)
+    const request = { ingredients: ingredients }
     const response = await fetch(`${url}/${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
