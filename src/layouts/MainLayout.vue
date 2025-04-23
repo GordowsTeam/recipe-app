@@ -10,7 +10,7 @@
 
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
       <q-list>
-        <q-item-label header> Essential Links </q-item-label>
+        <q-item-label header> Menu </q-item-label>
 
         <EssentialLink v-for="link in linksList" :key="link.title" v-bind="link" />
       </q-list>
@@ -28,17 +28,11 @@ import EssentialLink, { type EssentialLinkProps } from 'components/EssentialLink
 
 const linksList: EssentialLinkProps[] = [
   {
-    title: 'Search',
-    caption: 'Mi version',
+    title: 'Search Recipes',
+    caption: '',
     icon: 'school',
     link: 'my-search',
-  },
-  {
-    title: 'Search GPT',
-    caption: 'version creada con GPT',
-    icon: 'code',
-    link: 'search',
-  },
+  }
 ]
 
 const leftDrawerOpen = ref(false)
