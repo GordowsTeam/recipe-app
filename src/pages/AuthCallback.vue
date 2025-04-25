@@ -17,6 +17,7 @@ const clientId = import.meta.env.VITE_AWS_COGNITO_CLIENT_ID
 const redirectUri = import.meta.env.VITE_AWS_COGNITO_REDIRECT_URI
 
 onMounted(async () => {
+  console.log('setting id token');
   const code = route.query.code as string
   if (!code) {
     await router.replace('/login')
@@ -35,7 +36,7 @@ onMounted(async () => {
       data,
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     )
-
+    
     const { access_token, id_token, refresh_token, expires_in } = response.data
     localStorage.setItem('access_token', access_token)
     localStorage.setItem('id_token', id_token)

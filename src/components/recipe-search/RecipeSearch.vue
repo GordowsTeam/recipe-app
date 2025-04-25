@@ -42,15 +42,23 @@ const getRecipe = async () => {
     debugger
     const ingredients = listaIngredientes.value.map((item) => item.name)
     const request = { ingredients: ingredients }
+    const token = localStorage.getItem('id_token')
+
     const response = await fetch(`${url}/${endpoint}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-
+      headers: 
+      {
+         'Content-Type': 'application/json', 
+         Accept: 'application/json',
+         Authorization: `Bearer ${token}`, 
+      },
       body: JSON.stringify(request),
     })
+
     if (!response.ok) {
       throw new Error('Error al obtener datos')
     }
+    
     const data = await response.json()
     apiResponse.value = data
     recipes.value = data || []

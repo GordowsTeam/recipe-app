@@ -31,14 +31,14 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
-  /*Router.beforeEach((to, from, next) => {
+ /* Router.beforeEach((to, from, next) => {
     const idToken = localStorage.getItem('id_token')
     if (to.path !== '/login' && !idToken) {
       next('/login')
     } else {
       next()
     }
-  })*/
-
+  })
+*/
   return Router;
 });
