@@ -20,6 +20,11 @@ onMounted(async () => {
   console.log('setting id token');
   const code = route.query.code as string
   if (!code) {
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('id_token')
+    localStorage.removeItem('refresh_token')
+    localStorage.removeItem('expires_at')
+    
     await router.replace('/login')
     return
   }
@@ -42,7 +47,6 @@ onMounted(async () => {
     localStorage.setItem('id_token', id_token)
     localStorage.setItem('refresh_token', refresh_token)
     localStorage.setItem('expires_at', (Date.now() + expires_in * 1000).toString())
-
     await router.replace('/')
   } catch (err) {
     console.error('Auth error:', err)
