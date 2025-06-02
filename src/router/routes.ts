@@ -1,4 +1,6 @@
 import type { RouteRecordRaw } from 'vue-router'
+import LoginPage from 'pages/LoginPage.vue'
+import AuthCallback from 'pages/AuthCallback.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -7,7 +9,8 @@ const routes: RouteRecordRaw[] = [
     children: [
       { path: '', component: () => import('pages/MySearchPage.vue') },
       { path: 'my-search', name: 'my-search', component: () => import('pages/MySearchPage.vue') },
-      { path: 'search', name: 'search', component: () => import('pages/SearchPage.vue') },
+      { path: 'login', component: LoginPage },
+      { path: 'auth/callback', component: AuthCallback },
     ],
   },
 

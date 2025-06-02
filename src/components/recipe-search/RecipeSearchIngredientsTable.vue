@@ -8,7 +8,7 @@
           dense
           icon="delete"
           color="red"
-          @click="sendDeleteIngredient(props.row.ingrediente)"
+          @click="sendDeleteIngredient(props.row.name)"
         >
           <q-tooltip>Eliminar</q-tooltip>
         </q-btn>
@@ -36,8 +36,9 @@ const columnas: columns[] = [
 
 defineProps<{ ingredientes: Ingredient[] }>()
 const emit = defineEmits(['send-delete-ingredient'])
+
 // Función para eliminar ingredientes
-const sendDeleteIngredient = (ingredient: Ingredient) => {
-  emit('send-delete-ingredient', ingredient.name)
+const sendDeleteIngredient = (ingredientName: string) => {
+  emit('send-delete-ingredient', ingredientName)
 }
 </script>
