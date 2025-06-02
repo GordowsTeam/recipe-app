@@ -36,6 +36,7 @@ const columnas: columns[] = [
 
 defineProps<{ ingredientes: Ingredient[] }>()
 const emit = defineEmits(['send-delete-ingredient'])
+
 // Función para eliminar ingredientes
 const sendDeleteIngredient = (ingredientName: string) => {
   emit('send-delete-ingredient', ingredientName)
