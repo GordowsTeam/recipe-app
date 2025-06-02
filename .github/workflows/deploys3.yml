@@ -18,6 +18,9 @@ jobs:
       - name: Crear .env para producción
         run: |
           echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> .env
+          echo "VITE_AWS_COGNITO_DOMAIN=${{ secrets.VITE_AWS_COGNITO_DOMAIN }}" >> .env
+          echo "VITE_AWS_COGNITO_CLIENT_ID=${{ secrets.VITE_AWS_COGNITO_CLIENT_ID }}" >> .env
+          echo "VITE_AWS_COGNITO_REDIRECT_URI=${{ secrets.VITE_AWS_COGNITO_REDIRECT_URI }}" >> .env
 
       - uses: actions/setup-node@v3
         with:
