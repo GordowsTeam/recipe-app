@@ -31,6 +31,25 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 22.13.x
+          cache: 'npm'
+      - name: install
+        run: npm ci
+      - name: unit tests
+        run: npm run test:unit
+
+  # Deploy to S3
+  # This job will only run on the main or release/test branches
+  deploy:
+    name: Deploy to S3
+    runs-on: ubuntu-latest
+    needs: tests
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release/test'
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
       - name: Create .env
         run: |
           echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> .env
@@ -47,24 +66,13 @@ jobs:
         run: npm run test:unit
       - name: compile dist
         run: npm run build
-        
-  # Deploy to S3
-  # This job will only run on the main or release/test branches
-  deploy:
-    name: Deploy to S3
-    runs-on: ubuntu-latest
-    needs: tests
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release/test'
-    steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-region: ${{ secrets.S3_BUCKET_REGION }}
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT }}:role/vue-app-uploader-role
           role-session-name: Github_RecipeApp
-
       - name: Check login
         run: aws sts get-caller-identity
-
       - name: Upload to S3
         run: aws s3 sync ./dist s3://${{ secrets.S3_BUCKET }} --delete
