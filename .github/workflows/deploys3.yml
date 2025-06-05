@@ -61,6 +61,8 @@ jobs:
       AWS_COGNITO_REDIRECT_URI: ${{secrets.VITE_AWS_COGNITO_REDIRECT_URI}}
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release/test'
     steps:
+      - name: Read secrets
+        run: echo "My S3 bucket is $S3_BUCKET"
       - name: checkout
         uses: actions/checkout@v3
       - name: Create .env
