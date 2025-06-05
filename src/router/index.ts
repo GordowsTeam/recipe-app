@@ -31,5 +31,18 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
+  Router.beforeEach((to, from, next) => {
+    const idToken = localStorage.getItem('id_token')
+    if(to.path === '/auth/callback'){
+      next()
+    }
+    else if (to.path !== '/login' && !idToken) {
+      console.log('redirecting to Login')
+      next('/login')
+    } else {
+      next()
+    }
+  })
+
   return Router;
 });
