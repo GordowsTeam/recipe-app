@@ -1,0 +1,79 @@
+name: Build APK (Signed)
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['develop']
+    types: [opened, edited, reopened]
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    env:
+      KEYSTORE_FILE: my-release-key.keystore
+      ALIAS: ${{ secrets.ANDROID_KEYSTORE_ALIAS }}
+      KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22.13.x
+
+      - name: Setup Java (JDK 17)
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install dependencies
+        run: |
+          yarn install
+          npm install -g @quasar/cli
+
+      - name: Recreate keystore file from secret
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > $KEYSTORE_FILE
+
+      - name: Add Android SDK
+        uses: android-actions/setup-android@v2
+
+      - name: Add Capacitor Android
+        run: |
+          quasar mode add capacitor
+          quasar build -m capacitor -T android
+
+      # - name: Build unsigned APK
+      #   working-directory: ./src-capacitor/android
+      #   run: ./gradlew assembleRelease
+
+      - name: Align APK with zipalign
+        run: |
+          ZIPALIGN="$ANDROID_SDK_ROOT/build-tools/34.0.0/zipalign"
+          $ZIPALIGN -v -p 4 \
+            src-capacitor/android/app/build/outputs/apk/release/app-release-unsigned.apk \
+            app-release-aligned.apk
+
+      - name: Sign APK with apksigner
+        run: |
+          APKSIGNER="$ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner"
+          $APKSIGNER sign \
+            --ks $KEYSTORE_FILE \
+            --ks-key-alias "$ALIAS" \
+            --ks-pass pass:$KEYSTORE_PASSWORD \
+            --key-pass pass:$KEY_PASSWORD \
+            --out app-release-signed.apk \
+            app-release-aligned.apk
+
+      - name: Upload artifact (APK firmado)
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-signed
+          path: app-release-signed.apk
