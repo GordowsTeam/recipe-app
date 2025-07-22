@@ -23,10 +23,10 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue'
 import { defineProps } from 'vue'
-//import { useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import type { Recipe } from '../../interfaces/RecipeResponse'
 
-//const router = useRouter()
+const router = useRouter()
 
 const props = defineProps<{
   recipes: Recipe[]
@@ -43,9 +43,14 @@ const paginatedRecipes = computed(() => {
   return props.recipes.slice(start, end)
 })
 
-const viewRecipe = (recipe: Recipe) => {
-  //router.push({ name: 'recipe-detail', params: { id: recipe.id } })
+const viewRecipe = async (recipe: Recipe) => {
+  console.log('Viewing recipe:', recipe.name)
   console.log(recipe)
+  try {
+    await router.push({ name: 'recipe-detail', params: { id: recipe.id } })
+  } catch (error) {
+    console.error('Failed to navigate to recipe detail:', error)
+  }
 }
 </script>
 

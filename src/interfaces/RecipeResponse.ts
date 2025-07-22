@@ -21,6 +21,7 @@ export interface RecipeImage {
   }
   
   export interface Recipe {
+    id: string,
     name: string
     images: RecipeImage[]
     ingredients: RecipeIngredient[]

@@ -1,6 +1,7 @@
 import type { RouteRecordRaw } from 'vue-router'
 import LoginPage from 'pages/LoginPage.vue'
 import AuthCallback from 'pages/AuthCallback.vue'
+import RecipeDetail from 'components/recipe-search/RecipeDetail.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -11,6 +12,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'my-search', name: 'my-search', component: () => import('pages/MySearchPage.vue') },
       { path: 'login', component: LoginPage },
       { path: 'auth/callback', component: AuthCallback },
+      { path: 'recipe-detail/:id', name: 'recipe-detail', component: RecipeDetail }
     ],
   },
 
