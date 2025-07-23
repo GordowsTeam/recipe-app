@@ -1,17 +1,18 @@
 <template>
   <div class="col-12 col-md-6">
-    <q-input
-      filled
-      label="Ingrediente:"
-      hint="Que ingreditente tienes?"
-      lazy-rules
-      v-model="name"
-      :rules="[(val) => (val && val.length > 0) || 'Escribe algo']"
-    />
+    <div class="input-container">
 
-    <q-card-actions align="right">
+      <q-input
+        filled
+        label="Ingrediente:"
+        hint="Que ingreditente tienes?"
+        lazy-rules
+        v-model="name"
+        :rules="[(val) => (val && val.length > 0) || 'Escribe algo']"
+        class="q-mr-md"
+      />
       <q-btn label="Agregar" color="primary" @click="sendIngredient" />
-    </q-card-actions>
+    </div>
   </div>
 </template>
 
@@ -39,8 +40,6 @@ const sendIngredient = () => {
   error.value = { ingrediente: false, cantidad: false, unidad: false }
   // Validaciones
   if (!name.value) error.value.ingrediente = true
-  //if (!quantity.value || quantity.value <= 0) error.value.cantidad = true
-  //if (!unit.value) error.value.unidad = true
 
   if (error.value.ingrediente) {
     Notify.create({
@@ -55,3 +54,14 @@ const sendIngredient = () => {
   unit.value = ''
 }
 </script>
+<style scoped>
+.input-container {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* Space between the input and button */
+}
+
+.q-mr-md {
+  flex: 1; /* Make the input take up the remaining space */
+}
+</style>
