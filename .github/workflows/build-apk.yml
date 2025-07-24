@@ -31,7 +31,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Install dependencies
         run: |
@@ -43,16 +43,19 @@ jobs:
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > $KEYSTORE_FILE
 
       - name: Add Android SDK
-        uses: android-actions/setup-android@v2
+        uses: android-actions/setup-android@v3
 
       - name: Add Capacitor Android
         run: |
           quasar mode add capacitor
-          quasar build -m capacitor -T android
 
       - name: Make gradlew executable
         run: chmod +x gradlew
         working-directory: src-capacitor/android
+
+      - name: Add Capacitor Android
+        run: |
+          quasar build -m capacitor -T android
 
       - name: List files
         run: ls -l
