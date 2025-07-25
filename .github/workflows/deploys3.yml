@@ -2,8 +2,7 @@ name: Buld & Deploy S3
 on:
   workflow_run:
     workflows: ['build&Test-web']
-    types:
-      - completed
+    types: [completed]
 
 permissions:
   id-token: write
