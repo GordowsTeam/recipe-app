@@ -2,7 +2,7 @@ name: Build APK (Signed)
 
 on:
   workflow_run:
-    workflows: ['build&Test-apk']
+    workflows: [Build & Test Apk]
     types: [completed]
 
 jobs:
