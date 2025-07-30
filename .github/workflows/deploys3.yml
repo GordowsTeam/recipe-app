@@ -2,7 +2,8 @@ name: Buld & Deploy S3
 on:
   workflow_run:
     workflows: [Build & Test Web App]
-    types: [completed]
+    types:
+      - completed
 
 permissions:
   id-token: write
