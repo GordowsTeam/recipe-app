@@ -1,0 +1,43 @@
+name: Build & Test Web App
+on:
+  push:
+    branches: ['main', 'develop', 'release/test']
+  pull_request:
+    branches: ['main', 'develop', 'release/test']
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  # Build and Test
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 22.13.x
+          cache: 'npm'
+      - name: install
+        run: npm ci
+      - name: compile dist
+        run: npm run build
+
+  # Run Tests
+  tests:
+    name: Run Tests
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 22.13.x
+          cache: 'npm'
+      - name: install
+        run: npm ci
+      - name: unit tests
+        run: npm run test:unit
