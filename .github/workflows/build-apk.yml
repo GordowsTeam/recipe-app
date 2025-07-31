@@ -50,9 +50,9 @@ jobs:
       - name: Add Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Add Capacitor Android
-        run: |
-          quasar mode add capacitor
+      #- name: Add Capacitor Android
+      #  run: |
+      #    quasar mode add capacitor
 
       - name: Make gradlew executable
         run: chmod +x gradlew
