@@ -4,7 +4,13 @@
     :ingredientes="listaIngredientes"
     @send-delete-ingredient="removeIngredient"
   ></recipe-search-ingredients-table>
-  <q-btn label="Obtener Recetas" color="secondary" class="q-mt-md" @click="getRecipe" :disabled="isButtonDisabled" />
+  <q-btn
+    label="Obtener Recetas"
+    color="secondary"
+    class="q-mt-md"
+    @click="getRecipe"
+    :disabled="isButtonDisabled"
+  />
   <q-spinner v-if="loading" size="50px" color="primary" class="q-mt-md" />
   <recipe-list v-if="recipes.length" :recipes="recipes"></recipe-list>
 </template>
@@ -39,18 +45,16 @@ const getRecipe = async () => {
   try {
     const url = import.meta.env.VITE_API_URL
     const endpoint = 'api/recipe'
-    debugger
     const ingredients = listaIngredientes.value.map((item) => item.name)
     const request = { ingredients: ingredients }
     const token = localStorage.getItem('id_token')
 
     const response = await fetch(`${url}/${endpoint}`, {
       method: 'POST',
-      headers: 
-      {
-         'Content-Type': 'application/json', 
-         Accept: 'application/json',
-         Authorization: `Bearer ${token}`, 
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(request),
     })
@@ -58,7 +62,7 @@ const getRecipe = async () => {
     if (!response.ok) {
       throw new Error('Error al obtener datos')
     }
-    
+
     const data = await response.json()
     apiResponse.value = data
     recipes.value = data || []
