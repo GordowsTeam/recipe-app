@@ -63,10 +63,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Create .env
+        run: |
+          echo "VITE_API_URL=$API_URL" >> .env
+          echo "VITE_AWS_COGNITO_DOMAIN=$AWS_COGNITO_DOMAIN" >> .env
+          echo "VITE_AWS_COGNITO_CLIENT_ID=$AWS_COGNITO_CLIENT_ID" >> .env
+          echo "VITE_AWS_COGNITO_REDIRECT_URI=$AWS_COGNITO_REDIRECT_URI" >> .env
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 22.13.x
+          cache: 'npm'
 
       - name: Setup Java
         uses: actions/setup-java@v3
