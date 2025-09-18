@@ -49,7 +49,6 @@ jobs:
     needs: tests
     environment: ${{
       startsWith(github.ref, 'refs/heads/feat/') && 'test' ||
-      startsWith(github.ref, 'refs/heads/release/') && 'test' ||
       github.ref == 'refs/heads/main' && 'prod' }}
     env:
       KEYSTORE_FILE: my-release-key.keystore
@@ -63,6 +62,9 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+
+      - name: Show Enviroment
+        run: echo "My enviroment is ${{env.environment}}
 
       - name: Create .env
         run: |
