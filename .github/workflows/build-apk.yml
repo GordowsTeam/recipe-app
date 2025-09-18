@@ -64,7 +64,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Show Enviroment
-        run: echo "My enviroment is ${{startsWith(github.ref, 'refs/heads/feat/') && 'test' || github.ref == 'refs/heads/main' && 'prod' }} $API_URL"
+        run: echo "${{github.ref}} My enviroment is ${{startsWith(github.ref, 'refs/heads/feat/') && 'test' || github.ref == 'refs/heads/main' && 'prod' }} $API_URL"
 
       - name: Create .env
         run: |
