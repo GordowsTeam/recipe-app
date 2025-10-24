@@ -30,5 +30,6 @@ export interface RecipeImage {
     totalTime: number
     cuisinTypes: string[]
     mealTypes: string[]
-    directions: RecipeDirection[]
+    directions: RecipeDirection[],
+    recipeSourceType: string
   }

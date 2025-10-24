@@ -12,7 +12,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'my-search', name: 'my-search', component: () => import('pages/MySearchPage.vue') },
       { path: 'login', component: LoginPage },
       { path: 'auth/callback', component: AuthCallback },
-      { path: 'recipe-detail/:id', name: 'recipe-detail', component: RecipeDetail }
+      { path: 'recipe-detail/:id/:sourceTypeId?', name: 'recipe-detail', component: RecipeDetail }
     ],
   },
 

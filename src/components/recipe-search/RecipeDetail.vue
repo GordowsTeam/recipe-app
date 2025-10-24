@@ -72,9 +72,11 @@
   const getRecipe = async () => {
         try {
             const recipeId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
+            const sourceTypeId = Array.isArray(route.params.sourceTypeId) ? route.params.sourceTypeId[0] : route.params.sourceTypeId
+            console.log('Fetching recipe with ID:', recipeId, 'and Source Type ID:', sourceTypeId)
 
             const url = import.meta.env.VITE_API_URL
-            const endpoint = 'api/recipe/'+recipeId+'?recipeSourceType=3'
+            const endpoint = 'api/recipe/' + recipeId
             const token = localStorage.getItem('id_token')
 
             const response = await fetch(`${url}/${endpoint}`, {

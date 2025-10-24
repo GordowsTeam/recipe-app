@@ -44,10 +44,11 @@ const paginatedRecipes = computed(() => {
 })
 
 const viewRecipe = async (recipe: Recipe) => {
-  console.log('Viewing recipe:', recipe.name)
+  console.log('Viewing recipe:', recipe)
+
   console.log(recipe)
   try {
-    await router.push({ name: 'recipe-detail', params: { id: recipe.id } })
+    await router.push({ name: 'recipe-detail', params: { id: recipe.id, sourceTypeId: recipe.recipeSourceType } })
   } catch (error) {
     console.error('Failed to navigate to recipe detail:', error)
   }
