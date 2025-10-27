@@ -21,6 +21,7 @@ export interface RecipeImage {
   }
   
   export interface Recipe {
+    id: string,
     name: string
     images: RecipeImage[]
     ingredients: RecipeIngredient[]
@@ -29,5 +30,6 @@ export interface RecipeImage {
     totalTime: number
     cuisinTypes: string[]
     mealTypes: string[]
-    directions: RecipeDirection[]
+    directions: RecipeDirection[],
+    recipeSourceType: string
   }
