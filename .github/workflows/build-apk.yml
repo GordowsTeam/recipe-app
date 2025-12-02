@@ -63,7 +63,7 @@ jobs:
       AWS_COGNITO_DOMAIN: ${{secrets.VITE_AWS_COGNITO_DOMAIN}}
       AWS_COGNITO_CLIENT_ID: ${{secrets.VITE_AWS_COGNITO_CLIENT_ID}}
       AWS_COGNITO_REDIRECT_URI: ${{secrets.VITE_AWS_COGNITO_REDIRECT_URI}}
-      DEBUG_VERSION: ${{ github.ref_name}}-$(date +'T%H:%M:%S')
+      DEBUG_VERSION: ${{ github.ref_name }}-${{ github.event.repository.updated_at }}
       RELEASE_VERSION: 1.0.
     steps:
       - name: Checkout repo
