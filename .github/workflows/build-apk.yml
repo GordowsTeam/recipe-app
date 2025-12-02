@@ -68,11 +68,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Show Enviroment
-        run: |
-          echo "event name without $github.event_name with${{ github.event_name }} 
-          My enviroment is 
-          ${{startsWith(github.ref, 'refs/pull/') && 'test' 
-          || github.ref == 'refs/heads/main' && 'prod' }} $API_URL"
+        run: echo "${{github.ref}} My enviroment is ${{startsWith(github.ref, 'refs/pull/') && 'test' || github.ref == 'refs/heads/main' && 'prod' }}"
 
       - name: Create .env
         run: |
@@ -114,6 +110,7 @@ jobs:
 
       - name: Set APK Version
         working-directory: src-capacitor/android/app
+        if: github.ref == 'refs/heads/main'
         run: |
           VERSION_CODE=${{ github.run_number }}
           VERSION_NAME="1.0.${{ github.run_number }}"
@@ -127,7 +124,7 @@ jobs:
       - name: Build Debug or Release APK
         working-directory: src-capacitor/android
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          if [[ "${{ github.event_name }}" == "pull_request" || "${{ github.event_name }}" == "push" ]]; then
             echo "⏳ Building DEBUG APK"
             ./gradlew assembleDebug
             cp app/build/outputs/apk/debug/app-debug.apk ../../app-debug.apk
@@ -155,13 +152,13 @@ jobs:
               ../../app-release-aligned.apk
           fi
 
-      # - name: Upload APK Artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ${{ github.event_name == 'pull_request' && 'apk-debug' || 'apk-signed' }}
-      #     path: |
-      #       app-debug.apk
-      #       app-release-signed.apk
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ (github.event_name == 'pull_request' || github.event_name == 'push') && 'apk-debug' || 'apk-signed' }}
+          path: |
+            app-debug.apk
+            app-release-signed.apk
 
       # - name: Configure AWS credentials
       #   uses: aws-actions/configure-aws-credentials@v3
