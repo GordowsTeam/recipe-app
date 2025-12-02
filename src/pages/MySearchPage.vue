@@ -1,6 +1,5 @@
 <template>
   <q-page class="page-container">
-    <h6>Buscar Recetas</h6>
     <q-separator />
     <div class="q-pa-md">
       <recipe-search></recipe-search>

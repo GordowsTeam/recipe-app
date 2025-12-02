@@ -1,9 +1,55 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
+    <q-header elevated class="bg-white text-dark">
       <q-toolbar>
-        <q-toolbar-title> NUMA </q-toolbar-title>
-        <q-btn v-if="isAuthenticated" label="Logout" color="primary" @click="logout" />
+
+        <!-- LOGO / BRAND -->
+        <q-toolbar-title class="text-primary text-weight-bold">
+          NUMA
+        </q-toolbar-title>
+
+        <!-- NAV OPTIONS (only if logged in) -->
+        <div v-if="isAuthenticated" class="row items-center q-gutter-sm">
+
+          <!-- Favorites -->
+          <q-btn flat round icon="favorite" @click="goTo('favorites')" />
+
+          <!-- My Recipes -->
+          <q-btn flat round icon="restaurant_menu" @click="goTo('my-recipes')" />
+
+          <!-- Upload Recipe -->
+          <q-btn flat round icon="upload" @click="goTo('upload-recipe')" />
+
+          <!-- Profile Menu -->
+          <q-btn flat round icon="account_circle">
+            <q-menu anchor="bottom right" self="top right">
+              <q-list style="min-width: 150px">
+                <q-item clickable @click="goTo('profile')">
+                  <q-item-section>Perfil</q-item-section>
+                </q-item>
+
+                <q-item clickable @click="goTo('settings')">
+                  <q-item-section>Configuración</q-item-section>
+                </q-item>
+
+                <q-separator />
+
+                <q-item clickable @click="logout">
+                  <q-item-section class="text-red">Cerrar sesión</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
+        </div>
+
+        <!-- LOGIN BUTTON (if not logged in) -->
+        <q-btn
+          v-else
+          label="Login"
+          color="primary"
+          flat
+          @click="goTo('login')"
+        />
       </q-toolbar>
     </q-header>
 
@@ -14,22 +60,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import { parseJwt, logout, refreshTokens } from 'boot/cognito'
-import { onMounted, onBeforeUnmount } from 'vue'
+
+const router = useRouter()
+
+const goTo = (routeName: string) => {
+  router.push({ name: routeName }).catch(() => {})
+}
 
 const token = ref<string | null>(localStorage.getItem('id_token'))
 
 const isAuthenticated = computed(() => {
   if (!token.value) return false
   const user = parseJwt(token.value)
-  const exp = user?.exp
-  return exp && exp * 1000 > Date.now()
+  return user?.exp && user.exp * 1000 > Date.now()
 })
 
-// Idle logout logic
+/* -------------------------
+      IDLE LOGOUT LOGIC
+--------------------------*/
 let idleTimeout: ReturnType<typeof setTimeout>
-const IDLE_LIMIT = 15 * 60 * 1000 // 15 minutes
+const IDLE_LIMIT = 15 * 60 * 1000 // 15 min
+
 const resetIdleTimer = () => {
   clearTimeout(idleTimeout)
   idleTimeout = setTimeout(() => {
@@ -40,25 +94,25 @@ const resetIdleTimer = () => {
     logout()
   }, IDLE_LIMIT)
 }
+
 const activityEvents = ['mousemove', 'keydown', 'mousedown', 'touchstart']
 
-// Refresh token logic
+/* -------------------------
+     REFRESH TOKEN LOGIC
+--------------------------*/
 const checkAndRefreshToken = async () => {
   const idToken = localStorage.getItem('id_token')
   const payload = parseJwt(idToken)
-  
-  console.log('Checking token expiration:', payload)
 
-  if (!payload || !payload.exp) return
+  if (!payload?.exp) return
 
   const now = Math.floor(Date.now() / 1000)
   const expiresIn = payload.exp - now
 
-  if (expiresIn < 300) { // if less than 5 min
+  if (expiresIn < 300) { // 5 min
     try {
       await refreshTokens()
       token.value = localStorage.getItem('id_token')
-      console.log('Token refreshed!')
     } catch (err) {
       console.error('Failed to refresh token:', err)
       logout()
@@ -66,27 +120,25 @@ const checkAndRefreshToken = async () => {
   }
 }
 
+/* -------------------------
+          MOUNTING
+--------------------------*/
 onMounted(() => {
-  // Set the token on load
-  token.value = localStorage.getItem('id_token')
-
-  // Watch for token changes
+  // Keep token synced
   const tokenSyncInterval = setInterval(() => {
     token.value = localStorage.getItem('id_token')
   }, 2000)
 
-   // Check and refresh every 2 minutes
-   const tokenRefreshInterval = setInterval(() => {
-    checkAndRefreshToken().catch(err => {
-    console.error('Token refresh error:', err)
-  })
+  // Refresh token every 2 minutes
+  const tokenRefreshInterval = setInterval(() => {
+    checkAndRefreshToken().catch(err => console.error(err))
   }, 2 * 60 * 1000)
 
- // Set up idle timeout
- activityEvents.forEach(e => window.addEventListener(e, resetIdleTimer))
+  // Idle logout
+  activityEvents.forEach(e => window.addEventListener(e, resetIdleTimer))
   resetIdleTimer()
 
-  // Clean up
+  // Cleanup
   onBeforeUnmount(() => {
     clearInterval(tokenSyncInterval)
     clearInterval(tokenRefreshInterval)
@@ -94,7 +146,4 @@ onMounted(() => {
     clearTimeout(idleTimeout)
   })
 })
-
-
-
 </script>

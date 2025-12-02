@@ -1,67 +1,124 @@
 <template>
-  <div class="col-12 col-md-6">
-    <div class="input-container">
+  <div class="search-wrapper">
+
+    <!-- Selección de modo -->
+    <div class="mode-select">
+      <q-select
+        v-model="mode"
+        :options="modeOptions"
+        dense
+        filled
+        emit-value
+        map-options
+        class="mode-dropdown"
+      />
+    </div>
+
+    <!-- ÚNICA BARRA DE BÚSQUEDA -->
+    <div class="search-bar">
 
       <q-input
+        dense
         filled
-        label="Ingrediente:"
-        hint="Que ingreditente tienes?"
-        lazy-rules
-        v-model="name"
-        :rules="[(val) => (val && val.length > 0) || 'Escribe algo']"
-        class="q-mr-md"
+        v-model="text"
+        :placeholder="mode === 'recipe' ? 'Buscar receta…' : 'Agregar ingrediente…'"
+        class="search-input"
+        input-class="text-black"
+        @keyup.enter="handleAction"
       />
-      <q-btn label="Agregar" color="primary" @click="sendIngredient" />
+
+      <!-- Ícono dinámico -->
+      <q-btn
+        round
+        unelevated
+        color="primary"
+        :icon="mode === 'recipe' ? 'search' : 'add'"
+        @click="handleAction"
+      />
     </div>
+
   </div>
 </template>
 
 <script lang="ts" setup>
-import { Notify } from 'quasar'
 import { ref } from 'vue'
+import { Notify } from 'quasar'
+
 export interface Ingredient {
   name: string
   quantity: number
   unit: string
 }
 
-const name = ref('')
-const quantity = ref(0)
-const unit = ref('')
-// Opciones para el select de unidades
-//const opcionesUnidades = ['grs', 'kg', 'ml', 'lt', 'pz']
-// Definir errores
-const error = ref({ ingrediente: false, cantidad: false, unidad: false })
 const emits = defineEmits<{
+  search: [{ mode: string; keyword: string }]
   sendIngredient: [ingredient: Ingredient]
 }>()
 
-const sendIngredient = () => {
-  error.value = { ingrediente: false, cantidad: false, unidad: false }
-  // Validaciones
-  if (!name.value) error.value.ingrediente = true
+/* Estado */
+const mode = ref<'ingredient' | 'recipe'>('ingredient')
+const text = ref('')
 
-  if (error.value.ingrediente) {
+const modeOptions = [
+  { label: 'Por Ingrediente', value: 'ingredient' },
+  { label: 'Por Receta', value: 'recipe' }
+]
+
+/* Acción dinámica según el modo */
+const handleAction = () => {
+  const value = text.value.trim()
+
+  if (!value) {
     Notify.create({
       type: 'negative',
-      message: 'Por favor, completa todos los campos correctamente.',
+      message: mode.value === 'recipe'
+        ? 'Escribe algo para buscar recetas.'
+        : 'Escribe un ingrediente para agregar.',
     })
     return
   }
-  emits('sendIngredient', { name: name.value, quantity: quantity.value, unit: unit.value })
-  name.value = ''
-  quantity.value = 0
-  unit.value = ''
+
+  if (mode.value === 'recipe') {
+    emits('search', { mode: 'recipe', keyword: value })
+  } else {
+    emits('sendIngredient', {
+      name: value,
+      quantity: 0,
+      unit: '',
+    })
+  }
+
+  text.value = ''
 }
 </script>
+
 <style scoped>
-.input-container {
+.search-wrapper {
+  width: 100%;
   display: flex;
-  align-items: center;
-  gap: 16px; /* Space between the input and button */
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
 }
 
-.q-mr-md {
-  flex: 1; /* Make the input take up the remaining space */
+/* Dropdown superior */
+.mode-select {
+  width: 200px;
+}
+
+.mode-dropdown {
+  width: 100%;
+}
+
+/* Barra unificada */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 500px;
+}
+
+.search-input {
+  flex: 1;
 }
 </style>

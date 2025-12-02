@@ -1,75 +1,156 @@
 <template>
-  <recipe-search-form @send-ingredient="addIngredient"></recipe-search-form>
-  <recipe-search-ingredients-table
-    :ingredientes="listaIngredientes"
-    @send-delete-ingredient="removeIngredient"
-  ></recipe-search-ingredients-table>
-  <q-btn
-    label="Obtener Recetas"
-    color="secondary"
-    class="q-mt-md"
-    @click="getRecipe"
-    :disabled="isButtonDisabled"
-  />
-  <q-spinner v-if="loading" size="50px" color="primary" class="q-mt-md" />
-  <recipe-list v-if="recipes.length" :recipes="recipes"></recipe-list>
+  <div class="q-pa-md">
+
+    <!-- Barra de búsqueda unificada -->
+    <div class="row items-center q-gutter-sm">
+
+      <q-input
+        outlined
+        v-model="searchText"
+        class="col"
+        :label="modoBusqueda === 'ingrediente' ? 'Agregar ingrediente' : 'Buscar receta'"
+        @keyup.enter="modoBusqueda === 'ingrediente' ? addIngredient() : getRecipe()"
+      >
+
+        <!-- PREPEND: Dropdown minimalista con iconos -->
+        <template #prepend>
+          <q-btn-dropdown
+            flat
+            dense
+            round
+            no-caps
+            icon="more_vert"
+            content-class="bg-white"
+          >
+            <q-list bordered separator>
+
+              <q-item clickable v-close-popup @click="modoBusqueda = 'receta'">
+                <q-item-section avatar>
+                  <q-icon name="restaurant_menu" />
+                </q-item-section>
+                <q-item-section>Por Receta</q-item-section>
+              </q-item>
+
+              <q-item clickable v-close-popup @click="modoBusqueda = 'ingrediente'">
+                <q-item-section avatar>
+                  <q-icon name="spa" />
+                </q-item-section>
+                <q-item-section>Por Ingrediente</q-item-section>
+              </q-item>
+
+            </q-list>
+          </q-btn-dropdown>
+        </template>
+
+        <!-- APPEND: Botones -->
+        <template #append>
+
+          <!-- Modo ingrediente: botón + -->
+          <q-btn
+            v-if="modoBusqueda === 'ingrediente'"
+            dense flat round
+            icon="add"
+            color="primary"
+            @click="addIngredient()"
+          />
+
+          <!-- Lupa para buscar -->
+          <q-btn
+            dense flat round
+            icon="search"
+            color="secondary"
+            @click="getRecipe"
+          />
+
+        </template>
+
+      </q-input>
+    </div>
+
+    <!-- Chips de ingredientes -->
+    <div
+      v-if="modoBusqueda === 'ingrediente' && listaIngredientes.length"
+      class="q-mt-md row q-gutter-sm"
+    >
+      <q-chip
+        v-for="i in listaIngredientes"
+        :key="i.name"
+        removable
+        color="grey-3"
+        text-color="black"
+        @remove="removeIngredient(i.name)"
+      >
+        {{ i.name }}
+      </q-chip>
+    </div>
+
+    <q-spinner v-if="loading" size="50px" color="primary" class="q-mt-md" />
+
+    <recipe-list v-if="recipes.length" :recipes="recipes" class="q-mt-lg" />
+
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
-import { Notify, QSpinner } from 'quasar'
-import type { Ingredient } from './RecipeSearchForm.vue'
-import RecipeSearchForm from './RecipeSearchForm.vue'
-import RecipeSearchIngredientsTable from './RecipeSearchIngredientsTable.vue'
-import type { Recipe } from '../../interfaces/RecipeResponse'
+import { ref } from 'vue'
+import { Notify } from 'quasar'
 import RecipeList from './RecipeList.vue'
 
-const listaIngredientes = ref<Ingredient[]>([])
-const apiResponse = ref<object | null>()
-const recipes = ref<Recipe[]>([])
-const loading = ref(false)
-const isButtonDisabled = computed(() => listaIngredientes.value.length === 0)
+interface Ingredient {
+  name: string
+}
 
-const addIngredient = (ingredient: Ingredient) => {
-  listaIngredientes.value.push(ingredient)
-  console.log(listaIngredientes.value.map((item) => item.name))
+const modoBusqueda = ref<'receta' | 'ingrediente'>('receta')
+const searchText = ref('')
+const listaIngredientes = ref<Ingredient[]>([])
+
+const recipes = ref([])
+const loading = ref(false)
+
+const addIngredient = () => {
+  if (!searchText.value.trim()) return
+
+  listaIngredientes.value.push({ name: searchText.value.trim() })
+  searchText.value = ''
+
+  Notify.create({ type: 'positive', message: 'Ingrediente agregado' })
 }
 
 const removeIngredient = (name: string) => {
-  listaIngredientes.value = listaIngredientes.value.filter((item) => item.name !== name)
+  listaIngredientes.value = listaIngredientes.value.filter(i => i.name !== name)
   Notify.create({ type: 'info', message: 'Ingrediente eliminado' })
 }
 
 const getRecipe = async () => {
   loading.value = true
+
   try {
     const url = import.meta.env.VITE_API_URL
     const endpoint = 'api/recipe'
-    const ingredients = listaIngredientes.value.map((item) => item.name)
-    const request = { ingredients: ingredients }
     const token = localStorage.getItem('id_token')
+
+    const ingredients =
+      modoBusqueda.value === 'ingrediente'
+        ? listaIngredientes.value.map(i => i.name)
+        : [searchText.value.trim()]
 
     const response = await fetch(`${url}/${endpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify(request),
+      body: JSON.stringify({ ingredients })
     })
 
-    if (!response.ok) {
-      throw new Error('Error al obtener datos')
-    }
+    if (!response.ok) throw new Error()
 
-    const data = await response.json()
-    apiResponse.value = data
-    recipes.value = data || []
-    console.log(apiResponse)
-  } catch (error) {
-    console.error(error)
+    recipes.value = await response.json()
+  } catch {
+    Notify.create({ type: 'negative', message: 'Error al obtener recetas' })
   }
+
   loading.value = false
 }
 </script>
