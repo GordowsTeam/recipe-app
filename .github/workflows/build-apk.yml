@@ -63,7 +63,7 @@ jobs:
       AWS_COGNITO_DOMAIN: ${{secrets.VITE_AWS_COGNITO_DOMAIN}}
       AWS_COGNITO_CLIENT_ID: ${{secrets.VITE_AWS_COGNITO_CLIENT_ID}}
       AWS_COGNITO_REDIRECT_URI: ${{secrets.VITE_AWS_COGNITO_REDIRECT_URI}}
-      DEBUG_VERSION: ${{ github.ref_name +'-' + steps.time.outputs.time }}
+      DEBUG_VERSION: ${{ github.ref_name}}-{{steps.time.outputs.time }}
       RELEASE_VERSION: 1.0.
     steps:
       - name: Checkout repo
@@ -159,8 +159,8 @@ jobs:
         with:
           name: ${{ (github.event_name == 'pull_request' || github.event_name == 'push') && 'apk-debug' || 'apk-signed' }}
           path: |
-            kuma-debug-${{DEBUG_VERSION}}.apk
-            kuma-v${{RELEASE_VERSION+ '' + github.run_number }}.apk
+            kuma-debug-${{ DEBUG_VERSION }}.apk
+            kuma-v${{ RELEASE_VERSION }}{{ github.run_number }}.apk
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
@@ -175,8 +175,8 @@ jobs:
       - name: Upload to S3
         run: |
           if [[ ${{ github.ref }} == 'refs/heads/feature/35-firebase-aws-versionado' ]]
-            aws s3 cp ./dist/spa/kuma-debug-${{DEBUG_VERSION}}.apk s3://$S3_ALBERTANOS_BUCKET/debug/
+            aws s3 cp ./dist/spa/kuma-debug-${{ DEBUG_VERSION }}.apk s3://$S3_ALBERTANOS_BUCKET/debug/
           fi
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]
+            aws s3 cp ./dist/spa/kuma-v${{ RELEASE_VERSION }}{{ github.run_number }}.apk s3://$S3_ALBERTANOS_BUCKET/releases/
           fi
-            aws s3 cp ./dist/spa/kuma-v${{RELEASE_VERSION+ '' + github.run_number }}.apk s3://$S3_ALBERTANOS_BUCKET/releases/
