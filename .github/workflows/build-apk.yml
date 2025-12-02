@@ -1,10 +1,10 @@
 name: Build & Test Apk
 on:
   push:
-    branches: ['main']
-  pull_request:
-    branches: ['develop']
-    types: [opened, synchronize]
+    branches: ['main', 'feature/35-firebase-aws-versionado']
+  # pull_request:
+  #   branches: ['develop']
+  #   types: [opened, synchronize]
 
 permissions:
   id-token: write
@@ -49,8 +49,12 @@ jobs:
     needs: tests
     environment: ${{
       startsWith(github.ref, 'refs/pull/') && 'test' ||
+      startsWith(github.ref, 'refs/pull/') && 'test' ||
       github.ref == 'refs/heads/main' && 'prod' }}
     env:
+      S3_ALBERTANOS_BUCKET: ${{secrets.S3_ALBERTANOS_BUCKET}}
+      S3_BUCKET_REGION: ${{secrets.S3_BUCKET_REGION}}
+      AWS_ACCOUNT: ${{secrets.AWS_ACCOUNT}}
       KEYSTORE_FILE: my-release-key.keystore
       ALIAS: ${{ secrets.ANDROID_KEYSTORE_ALIAS }}
       KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -90,18 +94,12 @@ jobs:
           yarn install
           npm install -g @quasar/cli
 
-      # - name: Recreate keystore file from secret
-      #   run: |
-      #     echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > $KEYSTORE_FILE
-
       - name: Add Android SDK
         uses: android-actions/setup-android@v3
 
-      #- name: Add Capacitor Android
-      #  run: |
-      #    quasar mode add capacitor
       - name: Check directory
         run: ls
+
       - name: Make gradlew executable
         run: chmod +x gradlew
         working-directory: src-capacitor/android
@@ -109,6 +107,18 @@ jobs:
       - name: Add Capacitor Android
         run: |
           quasar build -m capacitor -T android
+
+      - name: Set APK Version
+        working-directory: src-capacitor/android/app
+        run: |
+          VERSION_CODE=${{ github.run_number }}
+          VERSION_NAME="1.0.${{ github.run_number }}"
+
+          echo "Asignando versionCode=$VERSION_CODE"
+          echo "Asignando versionName=$VERSION_NAME"
+
+          sed -i "s/versionCode .*/versionCode $VERSION_CODE/" build.gradle
+          sed -i 's/versionName .*/versionName "'"$VERSION_NAME"'"/' build.gradle
 
       - name: Build Debug or Release APK
         working-directory: src-capacitor/android
@@ -141,35 +151,23 @@ jobs:
               ../../app-release-aligned.apk
           fi
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ github.event_name == 'pull_request' && 'apk-debug' || 'apk-signed' }}
-          path: |
-            app-debug.apk
-            app-release-signed.apk
-
-      # - name: Align APK with zipalign
-      #   run: |
-      #     ZIPALIGN="$ANDROID_SDK_ROOT/build-tools/34.0.0/zipalign"
-      #     $ZIPALIGN -v -p 4 \
-      #       src-capacitor/android/app/build/outputs/apk/release/app-release-unsigned.apk \
-      #       app-release-aligned.apk
-
-      # - name: Sign APK with apksigner
-      #   run: |
-      #     APKSIGNER="$ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner"
-      #     $APKSIGNER sign \
-      #       --ks $KEYSTORE_FILE \
-      #       --ks-key-alias "$ALIAS" \
-      #       --ks-pass pass:$KEYSTORE_PASSWORD \
-      #       --key-pass pass:$KEY_PASSWORD \
-      #       --out app-release-signed.apk \
-      #       app-release-aligned.apk
-
-      # - name: Upload artifact (APK firmado)
+      # - name: Upload APK Artifact
       #   uses: actions/upload-artifact@v4
       #   with:
-      #     name: apk-signed
-      #     path: app-release-signed.apk
-      #
+      #     name: ${{ github.event_name == 'pull_request' && 'apk-debug' || 'apk-signed' }}
+      #     path: |
+      #       app-debug.apk
+      #       app-release-signed.apk
+
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v3
+      #   with:
+      #     aws-region: $S3_BUCKET_REGION
+      #     role-to-assume: arn:aws:iam::$AWS_ACCOUNT:role/GitHubActionsS3UploaderRole
+      #     role-session-name: Github_RecipeApk
+
+      # - name: Check login
+      #   run: aws sts get-caller-identity
+
+      # - name: Upload to S3
+      #   run: aws s3 sync ./dist s3://$S3_ALBERTANOS_BUCKET/ --delete
