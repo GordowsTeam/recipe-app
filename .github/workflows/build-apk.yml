@@ -115,7 +115,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: |
           VERSION_CODE=${{ github.run_number }}
-          VERSION_NAME="${{RELEASE_VERSION+''+ github.run_number }}"
+          VERSION_NAME="${{ RELEASE_VERSION }}{{github.run_number }}"
 
           echo "Asignando versionCode=$VERSION_CODE"
           echo "Asignando versionName=$VERSION_NAME"
