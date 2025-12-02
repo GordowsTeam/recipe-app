@@ -115,7 +115,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: |
           VERSION_CODE=${{ github.run_number }}
-          VERSION_NAME="${{ RELEASE_VERSION }}{{github.run_number }}"
+          VERSION_NAME="$RELEASE_VERSION${{ github.run_number }}"
 
           echo "Asignando versionCode=$VERSION_CODE"
           echo "Asignando versionName=$VERSION_NAME"
@@ -159,8 +159,8 @@ jobs:
         with:
           name: ${{ (github.event_name == 'pull_request' || github.event_name == 'push') && 'apk-debug' || 'apk-signed' }}
           path: |
-            kuma-debug-${{ DEBUG_VERSION }}.apk
-            kuma-v${{ RELEASE_VERSION }}{{ github.run_number }}.apk
+            kuma-debug-$DEBUG_VERSION.apk
+            kuma-v$RELEASE_VERSION${{ github.run_number }}.apk
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
@@ -175,8 +175,8 @@ jobs:
       - name: Upload to S3
         run: |
           if [[ '${{ github.ref }}' == 'refs/heads/feature/35-firebase-aws-versionado' ]]
-            aws s3 cp ./dist/spa/kuma-debug-${{ DEBUG_VERSION }}.apk s3://$S3_ALBERTANOS_BUCKET/debug/
+            aws s3 cp ./dist/spa/kuma-debug-$DEBUG_VERSION.apk s3://$S3_ALBERTANOS_BUCKET/debug/
           fi
           if [[ '${{ github.ref }}' == 'refs/heads/main' ]]
-            aws s3 cp ./dist/spa/kuma-v${{ RELEASE_VERSION }}{{ github.run_number }}.apk s3://$S3_ALBERTANOS_BUCKET/releases/
+            aws s3 cp ./dist/spa/kuma-v$RELEASE_VERSION${{ github.run_number }}.apk s3://$S3_ALBERTANOS_BUCKET/releases/
           fi
