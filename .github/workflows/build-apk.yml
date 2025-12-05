@@ -176,9 +176,9 @@ jobs:
 
       - name: Upload to S3
         run: |
-          if [[ '${{ github.ref }}' == 'refs/heads/feature/35-firebase-aws-versionado' ]]
+          if [[ '${{ github.ref }}' == 'refs/heads/feature/35-firebase-aws-versionado' ]];then
             aws s3 cp ./dist/spa/kuma-debug-$DEBUG_VERSION.apk s3://$S3_ALBERTANOS_BUCKET/debug/
           fi
-          if [[ '${{ github.ref }}' == 'refs/heads/main' ]]
+          if [[ '${{ github.ref }}' == 'refs/heads/main' ]];then
             aws s3 cp ./dist/spa/kuma-v$RELEASE_VERSION${{ github.run_number }}.apk s3://$S3_ALBERTANOS_BUCKET/releases/
           fi
