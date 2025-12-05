@@ -131,7 +131,7 @@ jobs:
           if [[ "${{ github.event_name }}" == "pull_request" || "${{ github.event_name }}" == "push" ]]; then
             echo "⏳ Building DEBUG APK"
             ./gradlew assembleDebug
-            cp app/build/outputs/apk/debug/app-debug.apk ../../app-debug.apk
+            cp app/build/outputs/apk/debug/app-debug.apk ../../kuma-debug-$DEBUG_VERSION.apk
           else
             echo "🔐 Recreating release keystore from secret"
             echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > $KEYSTORE_FILE
@@ -153,7 +153,7 @@ jobs:
               --ks-pass pass:$KEYSTORE_PASSWORD \
               --key-pass pass:$KEY_PASSWORD \
               --out ../../app-release-signed.apk \
-              ../../app-release-aligned.apk
+              ../../kuma-v$RELEASE_VERSION${{ github.run_number }}.apk
           fi
 
       - name: Upload APK Artifact
