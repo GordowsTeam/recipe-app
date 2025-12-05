@@ -81,6 +81,9 @@ jobs:
           echo "VITE_AWS_COGNITO_CLIENT_ID=$AWS_COGNITO_CLIENT_ID" >> .env
           echo "VITE_AWS_COGNITO_REDIRECT_URI=$AWS_COGNITO_REDIRECT_URI" >> .env
 
+      - name: Sanitize DEBUG_VERSION
+        run: echo "DEBUG_VERSION_SAFE=$(echo $DEBUG_VERSION | tr '/' '-')" >> $GITHUB_ENV
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -131,7 +134,7 @@ jobs:
           if [[ "${{ github.event_name }}" == "pull_request" || "${{ github.event_name }}" == "push" ]]; then
             echo "⏳ Building DEBUG APK"
             ./gradlew assembleDebug
-            cp app/build/outputs/apk/debug/app-debug.apk ../../kuma-debug-$DEBUG_VERSION.apk
+            cp app/build/outputs/apk/debug/app-debug.apk ../../kuma-debug-$DEBUG_VERSION_SAFE.apk
           else
             echo "🔐 Recreating release keystore from secret"
             echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > $KEYSTORE_FILE
@@ -161,7 +164,7 @@ jobs:
         with:
           name: ${{ (github.event_name == 'pull_request' || github.event_name == 'push') && 'apk-debug' || 'apk-signed' }}
           path: |
-            kuma-debug-${{env.DEBUG_VERSION}}.apk
+            kuma-debug-${{env.DEBUG_VERSION_SAFE}}.apk
             kuma-v${{env.RELEASE_VERSION}}${{ github.run_number }}.apk
 
       - name: Configure AWS credentials
@@ -177,7 +180,7 @@ jobs:
       - name: Upload to S3
         run: |
           if [[ '${{ github.ref }}' == 'refs/heads/feature/35-firebase-aws-versionado' ]];then
-            aws s3 cp ./dist/spa/kuma-debug-$DEBUG_VERSION.apk s3://$S3_ALBERTANOS_BUCKET/debug/
+            aws s3 cp ./dist/spa/kuma-debug-$DEBUG_VERSION_SAFE.apk s3://$S3_ALBERTANOS_BUCKET/debug/
           fi
           if [[ '${{ github.ref }}' == 'refs/heads/main' ]];then
             aws s3 cp ./dist/spa/kuma-v$RELEASE_VERSION${{ github.run_number }}.apk s3://$S3_ALBERTANOS_BUCKET/releases/
