@@ -72,11 +72,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      # - name: Set current date as env variable
-      #   run: echo "NOW=$(date +'T%H:%M:%S')" >> $GITHUB_ENV
-      # - name: Echo current date
-      #   run: echo $NOW # Gives "2022-12-11T01:42:20"
-
       - name: Create .env
         run: |
           echo "VITE_API_URL=$API_URL" >> .env
@@ -97,7 +92,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 22.13.x
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Setup Java
         uses: actions/setup-java@v3
@@ -106,9 +101,7 @@ jobs:
           java-version: '21'
 
       - name: Install dependencies
-        run: |
-          yarn install
-          npm install -g @quasar/cli
+        run: yarn install --frozen-lockfile
 
       - name: Add Android SDK
         uses: android-actions/setup-android@v3
@@ -122,7 +115,7 @@ jobs:
 
       - name: Add Capacitor Android
         run: |
-          quasar build -m capacitor -T android
+          npx quasar build -m capacitor -T android
 
       - name: Set APK Version
         working-directory: src-capacitor/android/app
