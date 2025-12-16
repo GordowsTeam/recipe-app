@@ -1,83 +1,8 @@
 <template>
   <div class="q-pa-md">
 
-    <!-- SEARCH BAR -->
-    <div class="row justify-center">
-      <q-input
-        outlined
-        v-model="searchText"
-        class="search-input"
-        :label="searchMode === 'ingredient' ? 'Add ingredient' : 'Search recipe'"
-        @keyup.enter="searchMode === 'ingredient' ? addIngredient() : getRecipes()"
-      >
-        <!-- Dropdown -->
-        <template #prepend>
-          <q-btn-dropdown
-            flat dense round no-caps
-            icon="more_vert"
-            content-class="bg-white"
-          >
-            <q-list bordered separator>
-
-              <q-item clickable v-close-popup @click="searchMode = 'recipe'">
-                <q-item-section avatar>
-                  <q-icon name="restaurant_menu"/>
-                </q-item-section>
-                <q-item-section>By Recipe</q-item-section>
-              </q-item>
-
-              <q-item clickable v-close-popup @click="searchMode = 'ingredient'">
-                <q-item-section avatar>
-                  <q-icon name="spa"/>
-                </q-item-section>
-                <q-item-section>By Ingredient</q-item-section>
-              </q-item>
-
-            </q-list>
-          </q-btn-dropdown>
-        </template>
-
-        <!-- Append: add ingredient + search -->
-        <template #append>
-          <q-btn
-            v-if="searchMode === 'ingredient'"
-            dense flat round
-            icon="add"
-            color="primary"
-            @click="addIngredient"
-          />
-
-          <q-btn
-            dense flat round
-            icon="search"
-            color="secondary"
-            @click="getRecipes"
-          />
-        </template>
-
-      </q-input>
-    </div>
-
-    <!-- INGREDIENT CHIPS -->
-    <div
-      v-if="searchMode === 'ingredient' && ingredientList.length && recipes.length === 0"
-      class="ingredients-row"
-    >
-      <q-chip
-        v-for="i in ingredientList"
-        :key="i.name"
-        removable
-        color="grey-3"
-        text-color="black"
-        @remove="removeIngredient(i.name)"
-      >
-        {{ i.name }}
-      </q-chip>
-    </div>
-
-    <!-- HOME SECTIONS (hidden when searching) -->
+    <!-- HOME SECTIONS (unchanged) -->
     <div v-if="recipes.length === 0" class="home-sections">
-
       <!-- ⭐ Recipes of the day (MODIFIED SECTION) -->
       <div class="editorial-container">
 
@@ -157,79 +82,108 @@
           </q-card>
         </div>
       </div>
-
     </div>
 
-    <!-- LOADING SPINNER -->
     <q-spinner v-if="loading" size="50px" color="primary" class="q-mt-md" />
 
-    <!-- RESULTS -->
-    <recipe-list v-if="recipes.length" :recipes="recipes" class="q-mt-lg" />
-
+    <recipe-list
+      v-if="recipes.length"
+      :recipes="recipes"
+      class="q-mt-lg"
+    />
   </div>
 </template>
 
-<script lang="ts" setup>
-import { ref } from 'vue'
+<script setup lang="ts">
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Notify } from 'quasar'
 import RecipeList from './RecipeList.vue'
+import type { Recipe } from 'src/interfaces/RecipeResponse'
 
-interface Ingredient { name: string }
+/* -------------------------
+        TYPES
+--------------------------*/
 
-const searchMode = ref<'recipe' | 'ingredient'>('recipe')
-const searchText = ref('')
-const ingredientList = ref<Ingredient[]>([])
+interface Ingredient {
+  name: string
+}
 
-const recipes = ref([])
+interface SearchEventDetail {
+  searchMode: 'recipe' | 'ingredient'
+  searchText: string
+  ingredientList: Ingredient[]
+}
+
+/* -------------------------
+        STATE
+--------------------------*/
+
+const recipes = ref<Recipe[]>([])
 const loading = ref(false)
 
-const addIngredient = () => {
-  if (!searchText.value.trim()) return
+let searchMode: 'recipe' | 'ingredient' = 'recipe'
+let searchText = ''
+let ingredientList: Ingredient[] = []
 
-  ingredientList.value.push({ name: searchText.value.trim() })
-  searchText.value = ''
-  Notify.create({ type: 'positive', message: 'Ingredient added' })
-}
+/* -------------------------
+        API
+--------------------------*/
 
-const removeIngredient = (name: string) => {
-  ingredientList.value = ingredientList.value.filter(i => i.name !== name)
-  Notify.create({ type: 'info', message: 'Ingredient removed' })
-}
-
-const getRecipes = async () => {
+const getRecipes = async (): Promise<void> => {
   loading.value = true
 
   try {
     const url = import.meta.env.VITE_API_URL
     const token = localStorage.getItem('id_token')
-    const endpoint = 'api/recipe'
 
     const ingredients =
-      searchMode.value === 'ingredient'
-        ? ingredientList.value.map(i => i.name)
-        : [searchText.value.trim()]
+      searchMode === 'ingredient'
+        ? ingredientList.map(i => i.name)
+        : [searchText.trim()]
 
-    const response = await fetch(`${url}/${endpoint}`, {
+    const response = await fetch(`${url}/api/recipe`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Accept: 'application/json',
         Authorization: `Bearer ${token}`
       },
       body: JSON.stringify({ ingredients })
     })
 
-    if (!response.ok) throw new Error()
+    if (!response.ok) {
+      throw new Error('Failed to fetch recipes')
+    }
 
-    recipes.value = await response.json()
+    recipes.value = (await response.json()) as Recipe[]
   } catch {
     Notify.create({ type: 'negative', message: 'Error fetching recipes' })
+  } finally {
+    loading.value = false
   }
-
-  loading.value = false
 }
-</script>
 
+/* -------------------------
+     EVENT BRIDGE
+--------------------------*/
+
+const handler = (event: Event) => {
+  const customEvent = event as CustomEvent<SearchEventDetail>
+
+  searchMode = customEvent.detail.searchMode
+  searchText = customEvent.detail.searchText
+  ingredientList = customEvent.detail.ingredientList
+
+  void getRecipes()
+}
+
+onMounted(() => {
+  window.addEventListener('trigger-recipe-search', handler)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('trigger-recipe-search', handler)
+})
+</script>
 <style scoped>
 .search-input {
   max-width: 400px;
