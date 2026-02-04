@@ -9,6 +9,8 @@
 
 <script setup lang="ts">
 import RecipeSearch from 'src/components/recipe-search/RecipeSearch.vue'
+
+defineOptions({ name: 'MySearchPage' })
 </script>
 
 <style scoped>

@@ -60,7 +60,7 @@
             round
             :color="recipe.isFavorite ? 'red' : 'grey'"
             :icon="recipe.isFavorite ? 'favorite' : 'favorite_border'"
-            @click.stop="toggleFavorite(recipe)"
+            @click.stop="onToggleFavorite(recipe)"
           />
 
           <q-btn
@@ -78,6 +78,14 @@
             icon="share"
             @click.stop="shareRecipe(recipe)"
           />
+          <q-btn
+            v-if="showRemoveFromMyRecipes"
+            flat
+            round
+            color="negative"
+            icon="remove_circle_outline"
+            @click.stop="emitRemoveFromMyRecipes(recipe)"
+          />
         </q-card-actions>
       </q-card>
     </div>
@@ -94,10 +102,35 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { Notify } from 'quasar'
 import type { Recipe } from '../../interfaces/RecipeResponse'
+import { useRecipeFavorites } from 'src/composables/useRecipeFavorites'
 
-const props = defineProps<{ recipes: Recipe[] }>()
+const props = withDefaults(
+  defineProps<{ recipes: Recipe[]; showRemoveFromMyRecipes?: boolean }>(),
+  { showRemoveFromMyRecipes: false }
+)
+const emit = defineEmits<{
+  (e: 'remove-from-my-recipes', recipe: Recipe): void
+  (e: 'favorite-toggled', recipe: Recipe, isFavorite: boolean): void
+}>()
 const router = useRouter()
+const { toggleFavorite, toggleSaved } = useRecipeFavorites()
+
+const onToggleFavorite = async (recipe: Recipe) => {
+  try {
+    const newState = await toggleFavorite(recipe)
+    emit('favorite-toggled', recipe, newState)
+    Notify.create({ type: 'positive', message: newState ? 'Added to favorites' : 'Removed from favorites' })
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Failed to update favorite'
+    Notify.create({ type: 'negative', message: msg })
+  }
+}
+
+const emitRemoveFromMyRecipes = (recipe: Recipe) => {
+  emit('remove-from-my-recipes', recipe)
+}
 
 const currentPage = ref(1)
 const itemsPerPage = 6
@@ -113,21 +146,14 @@ const paginatedRecipes = computed(() => {
 })
 
 const viewRecipe = (recipe: Recipe) => {
+  const id = recipe.id ?? (recipe as { Id?: string }).Id
+  if (!id) return
+  const sourceTypeId = '2'
   void router.push({
     name: 'recipe-detail',
-    params: {
-      id: recipe.id,
-      sourceTypeId: recipe.recipeSourceType
-    }
+    params: { id },
+    query: { sourceTypeId }
   })
-}
-
-const toggleFavorite = (recipe: Recipe) => {
-  recipe.isFavorite = !recipe.isFavorite
-}
-
-const toggleSaved = (recipe: Recipe) => {
-  recipe.isSaved = !recipe.isSaved
 }
 
 const shareRecipe = (recipe: Recipe) => {
