@@ -2,7 +2,9 @@
   "extends": "./.quasar/tsconfig.json",
   "compilerOptions": {
     "types": ["vitest/globals"],
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "skipLibCheck": true
   },
-  "include": ["src", "tests", ".vscode/tests"]
+  "include": ["src", "tests", ".vscode/tests"],
+  "exclude": ["node_modules"]
 }

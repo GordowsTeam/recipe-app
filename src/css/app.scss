@@ -1,1 +1,15 @@
 // app global css in SCSS form
+
+// Override del color primario según preferencia del usuario
+.primary-primary {
+  --q-primary: #1976d2;
+}
+.primary-teal {
+  --q-primary: #26a69a;
+}
+.primary-green {
+  --q-primary: #21ba45;
+}
+.primary-purple {
+  --q-primary: #9c27b0;
+}
