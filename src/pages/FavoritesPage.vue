@@ -22,7 +22,7 @@
         <div v-if="recipes.length === 0" class="text-body1 text-grey-7">
           You haven't added any favorites yet. Use the heart icon on a recipe to add it here.
         </div>
-        <recipe-list v-else :recipes="recipes" />
+        <recipe-list v-else :recipes="recipes" @favorite-toggled="onFavoriteToggled" />
       </template>
     </template>
   </q-page>
@@ -33,10 +33,12 @@ import { ref, computed, onMounted } from 'vue'
 import type { Recipe } from 'src/interfaces/RecipeResponse'
 import { getFavorites } from 'src/api/recipe'
 import { useRecipeFavorites } from 'src/composables/useRecipeFavorites'
+import { useRecipeListFilters } from 'src/components/recipe-search/filters/useRecipeListFilters'
 import { parseJwt } from 'boot/cognito'
 import RecipeList from 'src/components/recipe-search/RecipeList.vue'
 
 const { applyToRecipe, fetchFavorites } = useRecipeFavorites()
+const { clearFilters } = useRecipeListFilters()
 
 const recipes = ref<Recipe[]>([])
 const loading = ref(true)
@@ -64,15 +66,15 @@ const loadFavorites = async () => {
   }
 }
 
-// Used in template @favorite-toggled
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const onFavoriteToggled = (_recipe: Recipe, isFavorite: boolean) => {
+const onFavoriteToggled = (recipe: Recipe, isFavorite: boolean) => {
   if (!isFavorite) {
-    recipes.value = recipes.value.filter((r) => r.id !== _recipe.id)
+    recipes.value = recipes.value.filter((r) => r.id !== recipe.id)
   }
+  void fetchFavorites()
 }
 
 onMounted(() => {
+  clearFilters()
   void loadFavorites()
   void fetchFavorites()
 })

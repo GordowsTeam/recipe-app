@@ -37,7 +37,7 @@
               round
               :color="recipe.isFavorite ? 'red' : 'grey'"
               :icon="recipe.isFavorite ? 'favorite' : 'favorite_border'"
-              @click="toggleFavorite(recipe)"
+              @click="onToggleFavorite"
             />
             <q-btn
               flat
@@ -102,8 +102,6 @@ const route = useRoute()
 const router = useRouter()
 const { toggleFavorite, toggleSaved, applyToRecipe } = useRecipeFavorites()
 
-// Used in template @click
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const onToggleFavorite = async () => {
   if (!recipe.value) return
   try {

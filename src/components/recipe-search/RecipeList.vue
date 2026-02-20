@@ -1,5 +1,9 @@
 <template>
   <div>
+    <recipe-list-filters v-if="recipes.length > 0" class="q-mb-md" />
+    <q-banner v-if="recipes.length > 0 && filteredRecipes.length === 0" class="bg-grey-3 rounded-borders q-mb-md">
+      No recipes match your filters. Try adjusting or clear filters.
+    </q-banner>
     <!-- Loader Skeleton -->
     <div v-if="loading" class="recipe-list">
       <q-skeleton
@@ -21,7 +25,7 @@
         <div class="relative-position img-container">
           <q-img
             v-if="recipe.images?.length"
-            :src="recipe.images.find(img => img.main)?.url"
+            :src="mainImageUrl(recipe.images)"
             class="recipe-img"
           />
 
@@ -100,11 +104,17 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Notify } from 'quasar'
-import type { Recipe } from '../../interfaces/RecipeResponse'
+import type { Recipe, RecipeImage } from '../../interfaces/RecipeResponse'
 import { useRecipeFavorites } from 'src/composables/useRecipeFavorites'
+import { useRecipeListFilters } from 'src/components/recipe-search/filters/useRecipeListFilters'
+import RecipeListFilters from 'src/components/recipe-search/filters/RecipeListFilters.vue'
+
+function mainImageUrl(images: Recipe['images']): string | undefined {
+  return images?.find((img: RecipeImage) => img.main)?.url
+}
 
 const props = withDefaults(
   defineProps<{ recipes: Recipe[]; showRemoveFromMyRecipes?: boolean }>(),
@@ -136,13 +146,23 @@ const currentPage = ref(1)
 const itemsPerPage = 6
 const loading = ref(false)
 
+const { filterRecipes, nameQuery, caloriesMin, caloriesMax, timeMin, timeMax } = useRecipeListFilters()
+
+const filteredRecipes = computed(() => filterRecipes(props.recipes))
+
+watch(
+  () => [nameQuery.value, caloriesMin.value, caloriesMax.value, timeMin.value, timeMax.value],
+  () => { currentPage.value = 1 },
+  { deep: true }
+)
+
 const totalPages = computed(() =>
-  Math.ceil(props.recipes.length / itemsPerPage)
+  Math.ceil(filteredRecipes.value.length / itemsPerPage)
 )
 
 const paginatedRecipes = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
-  return props.recipes.slice(start, start + itemsPerPage)
+  return filteredRecipes.value.slice(start, start + itemsPerPage)
 })
 
 const viewRecipe = (recipe: Recipe) => {

@@ -33,50 +33,12 @@
         <div v-if="recipes.length === 0" class="text-body1 text-grey-7">
           You haven't added any recipes yet. Create a new recipe or search and add from the recipe detail page.
         </div>
-        <q-table
+        <recipe-list
           v-else
-          :rows="recipes"
-          :columns="columns"
-          row-key="id"
-          flat
-          bordered
-          class="recipe-table"
-          :rows-per-page-options="[10, 25, 50]"
-        >
-          <template #body-cell-name="props">
-            <q-td :props="props">
-              <span class="text-weight-medium">{{ props.row.name }}</span>
-            </q-td>
-          </template>
-          <template #body-cell-totalTime="props">
-            <q-td :props="props">{{ props.row.totalTime }} min</q-td>
-          </template>
-          <template #body-cell-calories="props">
-            <q-td :props="props">{{ props.row.calories }} cal</q-td>
-          </template>
-          <template #body-cell-actions="props">
-            <q-td :props="props">
-              <q-btn
-                flat
-                dense
-                round
-                size="sm"
-                color="primary"
-                icon="visibility"
-                @click="viewRecipe(props.row)"
-              />
-              <q-btn
-                flat
-                dense
-                round
-                size="sm"
-                color="negative"
-                icon="delete_outline"
-                @click="onRemoveFromMyRecipes(props.row)"
-              />
-            </q-td>
-          </template>
-        </q-table>
+          :recipes="recipes"
+          show-remove-from-my-recipes
+          @remove-from-my-recipes="onRemoveFromMyRecipes"
+        />
       </template>
     </template>
 
@@ -153,15 +115,16 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { Notify } from 'quasar'
 import type { Recipe } from 'src/interfaces/RecipeResponse'
 import { getMyRecipes, removeMyRecipe, createMyRecipe, type CreateUserRecipeRequest } from 'src/api/recipe'
 import { useRecipeFavorites } from 'src/composables/useRecipeFavorites'
+import { useRecipeListFilters } from 'src/components/recipe-search/filters/useRecipeListFilters'
 import { parseJwt } from 'boot/cognito'
+import RecipeList from 'src/components/recipe-search/RecipeList.vue'
 
-const router = useRouter()
 const { applyToRecipe } = useRecipeFavorites()
+const { clearFilters } = useRecipeListFilters()
 
 const recipes = ref<Recipe[]>([])
 const loading = ref(true)
@@ -177,13 +140,6 @@ const createForm = ref({
   totalTime: 0,
   calories: 0
 })
-
-const columns = [
-  { name: 'name', label: 'Name', field: 'name', align: 'left' as const, sortable: true },
-  { name: 'totalTime', label: 'Time', field: 'totalTime', align: 'left' as const, sortable: true },
-  { name: 'calories', label: 'Calories', field: 'calories', align: 'left' as const, sortable: true },
-  { name: 'actions', label: 'Actions', field: () => '', align: 'right' as const }
-]
 
 const token = computed(() => localStorage.getItem('id_token'))
 const isAuthenticated = computed(() => {
@@ -205,20 +161,6 @@ const loadMyRecipes = async () => {
   } finally {
     loading.value = false
   }
-}
-
-const viewRecipe = (recipe: Recipe) => {
-  const id = recipe.id ?? (recipe as { Id?: string }).Id
-  if (!id) return
-  const sourceTypeId =
-    recipe.recipeSourceType != null && recipe.recipeSourceType !== ''
-      ? String(recipe.recipeSourceType)
-      : '5'
-  void router.push({
-    name: 'recipe-detail',
-    params: { id },
-    query: { sourceTypeId }
-  })
 }
 
 const onRemoveFromMyRecipes = async (recipe: Recipe) => {
@@ -281,6 +223,7 @@ const onCreateRecipe = async () => {
 }
 
 onMounted(() => {
+  clearFilters()
   if (isAuthenticated.value) void loadMyRecipes()
   else loading.value = false
 })
@@ -290,9 +233,5 @@ onMounted(() => {
 .create-dialog-card {
   min-width: 400px;
   max-width: 560px;
-}
-.recipe-table {
-  border-radius: 8px;
-  overflow: hidden;
 }
 </style>

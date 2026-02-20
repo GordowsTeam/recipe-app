@@ -11,19 +11,26 @@
           <q-skeleton class="feature-img" />
           <q-skeleton type="text" class="q-mt-sm" style="max-width: 80%" />
         </div>
-        <div
-          v-else-if="featureRecipe"
-          class="editorial-feature editorial-feature-clickable"
-          @click="goToRecipe(featureRecipe)"
-        >
-          <q-img
-            v-if="featureRecipe.images?.length"
-            :src="featureRecipe.images.find(img => img.main)?.url"
-            class="feature-img"
-            ratio="4/3"
-          />
-          <div v-else class="feature-img feature-img-placeholder">
-            <q-icon name="restaurant" size="48px" />
+        <div v-else-if="featureRecipe" class="editorial-feature">
+          <div class="feature-img-wrapper">
+            <img
+              v-if="mainImageUrl(featureRecipe)"
+              :src="mainImageUrl(featureRecipe)"
+              class="feature-img"
+              alt=""
+            />
+            <div v-else class="feature-img feature-img-placeholder">
+              <q-icon name="restaurant" size="48px" />
+            </div>
+            <q-btn
+              round
+              unelevated
+              color="primary"
+              icon="open_in_new"
+              class="feature-details-btn"
+              aria-label="View recipe details"
+              @click.stop="goToRecipe(featureRecipe)"
+            />
           </div>
           <div class="feature-meta">
             <div class="feature-title">{{ featureRecipe.name }}</div>
@@ -56,7 +63,7 @@
               v-for="r in latestRecipes"
               :key="'latest-' + r.id"
               class="latest-item latest-item-clickable"
-              @click="goToRecipe(r)"
+              @click="selectAsFeature(r)"
             >
               <img
                 v-if="mainImageUrl(r)"
@@ -200,7 +207,7 @@ import { useRouter } from 'vue-router'
 import { Notify } from 'quasar'
 import RecipeList from './RecipeList.vue'
 import type { Recipe } from 'src/interfaces/RecipeResponse'
-import { getRecipes as getRecipesApi, getMyRecipes, getFavorites } from 'src/api/recipe'
+import { getRecipes as getRecipesApi, getMyRecipes, getFavorites, getLatestRecipes } from 'src/api/recipe'
 import { useRecipeFavorites } from 'src/composables/useRecipeFavorites'
 import { parseJwt } from 'boot/cognito'
 
@@ -271,10 +278,14 @@ const loadSectionRecipes = async (): Promise<void> => {
 
   loadingTopRated.value = true
   try {
-    const list = await getRecipesApi({ ingredients: ['recipe'] })
+    const [list, latest] = await Promise.all([
+      getRecipesApi({ ingredients: ['recipe'] }),
+      getLatestRecipes(5)
+    ])
     list.forEach(applyToRecipe)
-    featureRecipe.value = list[0] ?? null
-    latestRecipes.value = list.slice(1, 6)
+    latest.forEach(applyToRecipe)
+    latestRecipes.value = latest
+    featureRecipe.value = latest[0] ?? null
     topRatedRecipes.value = list.slice(0, 10)
   } catch {
     featureRecipe.value = null
@@ -286,7 +297,12 @@ const loadSectionRecipes = async (): Promise<void> => {
 }
 
 const mainImageUrl = (recipe: Recipe): string =>
-  recipe.images?.find(img => img.main)?.url ?? ''
+  recipe.images?.find(img => img.main)?.url ?? recipe.images?.[0]?.url ?? ''
+
+/** Set a recipe as the big feature recipe (used when clicking a latest recipe). */
+const selectAsFeature = (recipe: Recipe) => {
+  featureRecipe.value = recipe
+}
 
 const goToRecipe = (recipe: Recipe) => {
   const id = recipe.id ?? (recipe as { Id?: string }).Id
@@ -450,21 +466,28 @@ onBeforeUnmount(() => {
   align-items: flex-start; /* align content to left within left column */
 }
 
-.editorial-feature-clickable {
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
-.editorial-feature-clickable:hover {
-  opacity: 0.92;
+.feature-img-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
 }
 
-/* image: fixed sensible size, responsive */
+/* image: fixed sensible size, responsive (same approach as latest list) */
 .feature-img {
   width: 100%;
   max-width: 420px;
   height: auto;
+  aspect-ratio: 4 / 3;
   border-radius: 12px;
   object-fit: cover;
+  display: block;
+}
+
+.feature-details-btn {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .feature-img-placeholder {
