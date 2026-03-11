@@ -1,0 +1,109 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import { mockRecipes, getLatestRecipes } from '../data/recipes';
+const latest = getLatestRecipes(5);
+const featureRecipe = latest[0];
+const myRecipes = mockRecipes.slice(0, 2);
+const favoritesRecipes = mockRecipes.slice(2, 4);
+const topRated = mockRecipes.slice(0, 4);
+---
+
+<MainLayout title="NUMA - Home" isAuthenticated={true}>
+  <div class="home-sections">
+    <div class="editorial-container">
+      <div class="editorial-feature">
+        {featureRecipe ? (
+          <div class="feature-img-wrapper">
+            <div class="feature-img feature-img-placeholder">🍽️</div>
+            <div class="feature-meta">
+              <div class="feature-title">{featureRecipe.name}</div>
+              <div class="feature-subtitle">{featureRecipe.totalTime} min · {featureRecipe.calories} cal</div>
+            </div>
+          </div>
+        ) : (
+          <div class="feature-img feature-img-placeholder">🍽️</div>
+        )}
+      </div>
+      <div class="editorial-latest">
+        <div class="latest-title">The Latest</div>
+        {latest.map((r) => (
+          <a href={`/recipe-detail/${r.id}`} class="latest-item">
+            <div class="latest-thumb latest-thumb-placeholder">🍴</div>
+            <div class="latest-info">
+              <div class="latest-category">{r.totalTime} MIN · {r.calories} CAL</div>
+              <div class="latest-name">{r.name}</div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <div style="margin-top: 24px;">
+      <div class="section-title">🧑‍🍳 Your recipes</div>
+      <div class="section-scroll">
+        {myRecipes.map((r) => (
+          <a href={`/recipe-detail/${r.id}`} class="section-card">
+            <div class="section-card-img-placeholder">📖</div>
+            <div class="section-card-body">
+              <div class="section-card-name">{r.name}</div>
+              <div class="section-card-meta">{r.totalTime} min · {r.calories} cal</div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <div style="margin-top: 24px;">
+      <div class="section-title">❤️ Favorite recipes</div>
+      <div class="section-scroll">
+        {favoritesRecipes.map((r) => (
+          <a href={`/recipe-detail/${r.id}`} class="section-card">
+            <div class="section-card-img-placeholder">❤️</div>
+            <div class="section-card-body">
+              <div class="section-card-name">{r.name}</div>
+              <div class="section-card-meta">{r.totalTime} min · {r.calories} cal</div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <div style="margin-top: 24px;">
+      <div class="section-title">🔝 Top rated</div>
+      <div class="section-scroll">
+        {topRated.map((r) => (
+          <a href={`/recipe-detail/${r.id}`} class="section-card">
+            <div class="section-card-img-placeholder">⭐</div>
+            <div class="section-card-body">
+              <div class="section-card-name">{r.name}</div>
+              <div class="section-card-meta">{r.totalTime} min · {r.calories} cal</div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <div style="margin-top: 32px;">
+      <div class="section-title">Search results (mock)</div>
+      <div class="recipe-list">
+        {mockRecipes.map((r) => (
+          <a href={`/recipe-detail/${r.id}`} class="recipe-card">
+            <div class="img-container">
+              <div class="section-card-img-placeholder" style="aspect-ratio: 4/3;">🍽️</div>
+              <div class="title-always-visible">{r.name}</div>
+              <div class="badge-container">
+                <span class="badge">⏱ {r.totalTime} min</span>
+                <span class="badge">🔥 {r.calories} cal</span>
+              </div>
+            </div>
+            <div class="recipe-card-actions">
+              <button type="button" aria-label="Favorito"><span class="material-symbols-outlined" style="font-size:20px">favorite</span></button>
+              <button type="button" aria-label="Guardar"><span class="material-symbols-outlined" style="font-size:20px">bookmark</span></button>
+              <button type="button" aria-label="Compartir"><span class="material-symbols-outlined" style="font-size:20px">share</span></button>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</MainLayout>

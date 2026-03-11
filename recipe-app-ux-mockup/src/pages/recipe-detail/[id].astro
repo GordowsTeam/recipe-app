@@ -1,0 +1,92 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import { getRecipeById, mockRecipes } from '../../data/recipes';
+
+export function getStaticPaths() {
+  return mockRecipes.map((r) => ({ params: { id: r.id } }));
+}
+
+const { id } = Astro.params;
+const recipe = id ? getRecipeById(id) : null;
+---
+
+<MainLayout title={recipe ? `${recipe.name} - NUMA` : 'Recipe - NUMA'} isAuthenticated={true}>
+  <a href="/" class="btn-back">
+    <span class="material-symbols-outlined" style="font-size:20px">arrow_back</span>
+    Return
+  </a>
+
+  {recipe ? (
+    <article class="recipe-detail">
+      <div class="recipe-detail-img-placeholder">🍽️</div>
+      <div style="margin-top: 16px;">
+        <div class="recipe-detail-header">
+          <h1 style="font-size: 1.5rem; margin: 0;">{recipe.name}</h1>
+          <div class="recipe-detail-actions">
+            <button type="button" aria-label="Favorito"><span class="material-symbols-outlined">favorite</span></button>
+            <button type="button" aria-label="Guardar"><span class="material-symbols-outlined">bookmark</span></button>
+            <button type="button" aria-label="Compartir"><span class="material-symbols-outlined">share</span></button>
+            <button type="button" aria-label="Añadir a mis recetas"><span class="material-symbols-outlined">bookmark_add</span></button>
+          </div>
+        </div>
+        <p class="recipe-detail-meta">Calories: {recipe.calories} · {recipe.totalTime} min</p>
+        {recipe.description && <p class="recipe-description">{recipe.description}</p>}
+
+        {recipe.cuisinTypes && recipe.cuisinTypes.length > 0 && (
+          <section style="margin-top: 20px;">
+            <h2 style="font-size: 1.1rem; margin-bottom: 8px;">Cuisine Types</h2>
+            <ul class="cuisine-types-list">
+              {recipe.cuisinTypes.map((c) => <li>{c}</li>)}
+            </ul>
+          </section>
+        )}
+
+        <section style="margin-top: 20px;">
+          <h2 style="font-size: 1.1rem; margin-bottom: 8px;">Ingredients</h2>
+          <ul class="ingredients-list">
+            {recipe.ingredients.map((i) => <li>{i.text}</li>)}
+          </ul>
+        </section>
+
+        {recipe.directions && recipe.directions.length > 0 && (
+          <section style="margin-top: 24px;">
+            <h2 style="font-size: 1.1rem; margin-bottom: 12px;">Directions</h2>
+            {recipe.directions.map((d, idx) => (
+              <div class="direction-step">
+                <strong>Step {idx + 1}</strong>
+                <p style="margin: 8px 0 0;">{d.instructionText}</p>
+              </div>
+            ))}
+          </section>
+        )}
+      </div>
+    </article>
+  ) : (
+    <p>Recipe not found.</p>
+  )}
+</MainLayout>
+
+<style>
+  .recipe-detail-img-placeholder {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: var(--grey-3);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+  }
+  .recipe-detail-actions {
+    display: flex;
+    gap: 4px;
+  }
+  .recipe-detail-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    color: var(--grey-7);
+  }
+  .recipe-detail-actions button:hover { color: var(--primary); }
+</style>

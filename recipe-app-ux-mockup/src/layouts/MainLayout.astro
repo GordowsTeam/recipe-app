@@ -1,0 +1,172 @@
+---
+interface Props {
+  title?: string;
+  isAuthenticated?: boolean;
+}
+const { title = 'NUMA - Recipe App', isAuthenticated = true } = Astro.props;
+---
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+  </head>
+  <body>
+    <header class="app-header">
+      <button type="button" class="header-menu-btn" id="drawer-toggle" aria-label="Abrir menú">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <a href="/" class="header-logo">NUMA</a>
+
+      <div class="search-wrapper">
+        <div class="search-input-wrap">
+          <button type="button" class="search-mode-btn" id="search-mode-btn" aria-label="Cambiar modo búsqueda">
+            <span class="material-symbols-outlined">more_vert</span>
+          </button>
+          <input type="text" id="search-input" placeholder="Search recipe" aria-label="Buscar receta" />
+          <button type="button" class="search-submit-btn" id="search-submit" aria-label="Buscar">
+            <span class="material-symbols-outlined" style="font-size:20px">search</span>
+          </button>
+        </div>
+        <div class="ingredients-row" id="ingredients-row" hidden></div>
+      </div>
+
+      <span class="header-spacer"></span>
+
+      <nav class="header-nav">
+        {isAuthenticated ? (
+          <div style="display: contents">
+            <a href="/favorites" aria-label="Favoritos"><span class="material-symbols-outlined">favorite</span></a>
+            <a href="/my-recipes" aria-label="Mis recetas"><span class="material-symbols-outlined">restaurant_menu</span></a>
+            <a href="/upload-recipe" aria-label="Subir receta"><span class="material-symbols-outlined">upload</span></a>
+            <div class="nav-account">
+              <button type="button" id="account-btn" aria-label="Cuenta">
+                <span class="material-symbols-outlined">account_circle</span>
+              </button>
+              <div class="account-menu" id="account-menu" hidden>
+                <a href="/profile">Perfil</a>
+                <a href="/settings">Configuración</a>
+                <a href="/login" class="text-red">Cerrar sesión</a>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <a href="/login" class="btn-login">Login</a>
+        )}
+      </nav>
+    </header>
+
+    <!-- Drawer -->
+    <div class="drawer-overlay" id="drawer-overlay" aria-hidden="true"></div>
+    <aside class="drawer" id="drawer" aria-label="Menú de navegación">
+      <ul class="drawer-list">
+        <li class="drawer-list-label">Navigation</li>
+        <li><a href="/" class="drawer-item"><span class="material-symbols-outlined icon">home</span><span class="drawer-item-content"><span class="label">Home</span><span class="caption">Browse recipes</span></span></a></li>
+        {isAuthenticated && (
+          <>
+            <li><a href="/favorites" class="drawer-item"><span class="material-symbols-outlined icon">favorite</span><span class="drawer-item-content"><span class="label">Favorites</span><span class="caption">Your saved recipes</span></span></a></li>
+            <li><a href="/my-recipes" class="drawer-item"><span class="material-symbols-outlined icon">restaurant_menu</span><span class="drawer-item-content"><span class="label">My Recipes</span><span class="caption">Your recipes</span></span></a></li>
+            <li><a href="/upload-recipe" class="drawer-item"><span class="material-symbols-outlined icon">upload</span><span class="drawer-item-content"><span class="label">Upload Recipe</span><span class="caption">Share your recipe</span></span></a></li>
+            <li class="drawer-list-label">Account</li>
+            <li><a href="/profile" class="drawer-item"><span class="material-symbols-outlined icon">account_circle</span><span class="drawer-item-content"><span class="label">Profile</span><span class="caption">View your profile</span></span></a></li>
+            <li><a href="/settings" class="drawer-item"><span class="material-symbols-outlined icon">settings</span><span class="drawer-item-content"><span class="label">Settings</span><span class="caption">App settings</span></span></a></li>
+            <li><a href="/login" class="drawer-item logout"><span class="material-symbols-outlined icon">logout</span><span class="drawer-item-content"><span class="label">Logout</span></span></a></li>
+          </>
+        )}
+        {!isAuthenticated && (
+          <li><a href="/login" class="drawer-item"><span class="material-symbols-outlined icon">login</span><span class="drawer-item-content"><span class="label">Login</span><span class="caption">Sign in to your account</span></span></a></li>
+        )}
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <slot />
+    </main>
+
+    <script>
+      (function () {
+        const drawer = document.getElementById('drawer');
+        const overlay = document.getElementById('drawer-overlay');
+        const toggle = document.getElementById('drawer-toggle');
+        const searchInput = document.getElementById('search-input');
+        const searchModeBtn = document.getElementById('search-mode-btn');
+        const ingredientsRow = document.getElementById('ingredients-row');
+        const accountBtn = document.getElementById('account-btn');
+        const accountMenu = document.getElementById('account-menu');
+
+        let searchMode = 'recipe';
+        let ingredients = [];
+
+        function openDrawer() {
+          drawer?.classList.add('open');
+          overlay?.classList.add('open');
+          overlay?.setAttribute('aria-hidden', 'false');
+        }
+        function closeDrawer() {
+          drawer?.classList.remove('open');
+          overlay?.classList.remove('open');
+          overlay?.setAttribute('aria-hidden', 'true');
+        }
+
+        toggle?.addEventListener('click', () => drawer?.classList.contains('open') ? closeDrawer() : openDrawer());
+        overlay?.addEventListener('click', closeDrawer);
+
+        searchModeBtn?.addEventListener('click', () => {
+          searchMode = searchMode === 'recipe' ? 'ingredient' : 'recipe';
+          searchInput.placeholder = searchMode === 'ingredient' ? 'Add ingredient' : 'Search recipe';
+        });
+
+        document.getElementById('search-submit')?.addEventListener('click', () => {
+          if (searchMode === 'ingredient' && searchInput?.value.trim()) {
+            ingredients.push(searchInput.value.trim());
+            ingredientsRow.hidden = false;
+            const chip = document.createElement('span');
+            chip.className = 'chip';
+            chip.innerHTML = searchInput.value.trim() + ' <button type="button" class="chip-remove" aria-label="Quitar">×</button>';
+            chip.querySelector('.chip-remove')?.addEventListener('click', () => { chip.remove(); ingredients = ingredients.filter(i => i !== searchInput.value.trim()); });
+            ingredientsRow.appendChild(chip);
+            searchInput.value = '';
+          }
+        });
+
+        if (accountBtn && accountMenu) {
+          accountBtn.addEventListener('click', () => {
+            const open = accountMenu.getAttribute('hidden') == null;
+            accountMenu.toggleAttribute('hidden', open);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  @import '../styles/global.css';
+  .nav-account { position: relative; }
+  .account-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    padding: 8px 0;
+    min-width: 160px;
+  }
+  .account-menu a {
+    display: block;
+    padding: 10px 16px;
+    color: #212121;
+    text-decoration: none;
+  }
+  .account-menu a:hover { background: var(--grey-1); }
+  .account-menu .text-red { color: var(--error); }
+  .drawer-item { display: flex; align-items: center; gap: 12px; }
+  .drawer-item-content { display: flex; flex-direction: column; }
+</style>
