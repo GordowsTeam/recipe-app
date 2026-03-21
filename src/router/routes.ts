@@ -8,8 +8,8 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', name: 'home', component: () => import('pages/MySearchPage.vue') },
-      { path: 'my-search', name: 'my-search', component: () => import('pages/MySearchPage.vue') },
+      { path: '', redirect: '/my-search' },
+      { path: 'my-search', name: 'home', component: () => import('pages/MySearchPage.vue') },
       { path: 'login', name: 'login', component: LoginPage },
       { path: 'auth/callback', component: AuthCallback },
       { path: 'recipe-detail/:id', name: 'recipe-detail', component: RecipeDetail },

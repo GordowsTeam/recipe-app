@@ -8,6 +8,7 @@
 import { onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
+import { clearPkceVerifier, getPkceVerifier } from 'boot/cognito'
 
 const router = useRouter()
 const route = useRoute()
@@ -17,14 +18,14 @@ const clientId = import.meta.env.VITE_AWS_COGNITO_CLIENT_ID
 const redirectUri = import.meta.env.VITE_AWS_COGNITO_REDIRECT_URI
 
 onMounted(async () => {
-  console.log('setting id token');
   const code = route.query.code as string
+  const codeVerifier = getPkceVerifier()
   if (!code) {
     localStorage.removeItem('access_token')
     localStorage.removeItem('id_token')
     localStorage.removeItem('refresh_token')
     localStorage.removeItem('expires_at')
-    
+    clearPkceVerifier()
     await router.replace('/login')
     return
   }
@@ -34,6 +35,9 @@ onMounted(async () => {
   data.append('client_id', clientId)
   data.append('code', code)
   data.append('redirect_uri', redirectUri)
+  if (codeVerifier) {
+    data.append('code_verifier', codeVerifier)
+  }
 
   try {
     const response = await axios.post(
@@ -47,9 +51,11 @@ onMounted(async () => {
     localStorage.setItem('id_token', id_token)
     localStorage.setItem('refresh_token', refresh_token)
     localStorage.setItem('expires_at', (Date.now() + expires_in * 1000).toString())
-    await router.replace('/')
+    clearPkceVerifier()
+    await router.replace('/my-search')
   } catch (err) {
     console.error('Auth error:', err)
+    clearPkceVerifier()
     await router.replace('/login')
   }
 })

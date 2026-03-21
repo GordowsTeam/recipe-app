@@ -111,7 +111,7 @@
                   <q-item-section>Configuración</q-item-section>
                 </q-item>
                 <q-separator />
-                <q-item clickable @click="logout">
+                <q-item clickable @click="handleLogout">
                   <q-item-section class="text-red">Cerrar sesión</q-item-section>
                 </q-item>
               </q-list>
@@ -198,7 +198,7 @@
           </q-item-section>
         </q-item>
         <q-separator spaced v-if="isAuthenticated" />
-        <q-item clickable v-ripple @click="logout" v-if="isAuthenticated">
+        <q-item clickable v-ripple @click="handleLogout" v-if="isAuthenticated">
           <q-item-section avatar>
             <q-icon name="logout" color="red" />
           </q-item-section>
@@ -232,7 +232,7 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Notify } from 'quasar'
-import { parseJwt, logout, refreshTokens } from 'boot/cognito'
+import { clearPkceVerifier, logout as cognitoLogout, parseJwt, refreshTokens } from 'boot/cognito'
 import { useRecipeFavorites } from 'src/composables/useRecipeFavorites'
 
 interface Ingredient {
@@ -252,6 +252,21 @@ watch(() => route.path, () => {
 }, { immediate: false })
 const goTo = (routeName: string) => {
   router.push({ name: routeName }).catch(() => {})
+}
+
+const clearAuthTokens = (): void => {
+  localStorage.removeItem('access_token')
+  localStorage.removeItem('id_token')
+  localStorage.removeItem('refresh_token')
+  localStorage.removeItem('expires_at')
+  clearPkceVerifier()
+  token.value = null
+}
+
+const handleLogout = (): void => {
+  clearAuthTokens()
+  void router.replace('/login')
+  cognitoLogout()
 }
 
 /* AUTH */
@@ -309,7 +324,7 @@ const IDLE_LIMIT = 15 * 60 * 1000
 
 const resetIdleTimer = () => {
   clearTimeout(idleTimeout)
-  idleTimeout = setTimeout(() => logout(), IDLE_LIMIT)
+  idleTimeout = setTimeout(() => handleLogout(), IDLE_LIMIT)
 }
 
 const activityEvents = ['mousemove', 'keydown', 'mousedown', 'touchstart']

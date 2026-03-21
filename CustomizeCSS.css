@@ -1,0 +1,58 @@
+/* ===== PAGE BACKGROUND ===== */
+.background-customizable {
+    background-color: #ffffff;
+}
+
+/* ===== LOGIN CARD ===== */
+.banner-customizable {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+}
+
+/* ===== LOGO ===== */
+.logo-customizable {
+    max-width: 180px;
+    margin-bottom: 20px;
+}
+
+/* ===== LABELS ===== */
+.label-customizable {
+    color: #374151;
+    font-size: 13px;
+}
+
+/* ===== INPUT FIELDS ===== */
+.inputField-customizable {
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #111827;
+    padding: 10px;
+}
+
+.inputField-customizable:focus {
+    border-color: #2563eb;
+    outline: none;
+}
+
+/* ===== SIGN IN BUTTON ===== */
+.submitButton-customizable {
+    background-color: #2563eb;
+    color: #ffffff;
+    border-radius: 6px;
+    padding: 10px;
+    border: none;
+    font-weight: 600;
+}
+
+.submitButton-customizable:hover {
+    background-color: #1d4ed8;
+}
+
+/* ===== ERROR MESSAGE ===== */
+.errorMessage-customizable {
+    color: #dc2626;
+    font-size: 12px;
+}
