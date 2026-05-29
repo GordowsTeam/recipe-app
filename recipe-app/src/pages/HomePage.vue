@@ -1,98 +1,86 @@
 <template>
-    <q-page-container>
-      <q-page padding>
-        <!-- Welcome Message -->
-        <q-card>
-          <q-card-section>
-            <h3>Welcome back, User!</h3>
-            <p>Here are your recipe suggestions for today.</p>
-          </q-card-section>
-        </q-card>
+  <q-page padding>
+    <!-- Saludo -->
+    <div class="q-mb-lg">
+      <div class="text-h5 text-weight-medium">{{ greeting }}, Sofía</div>
+      <div class="text-caption text-grey-6 q-mt-xs">{{ today }}</div>
+    </div>
 
-        <!-- Recipe Calendar -->
-        <q-card>
-          <q-card-section>
-            <h4>Recipes for the Week</h4>
-            <!-- Simulated Calendar with daily meals -->
-            <q-item>
-              <q-item-section>
-                <div><strong>Breakfast:</strong> Pancakes</div>
-                <div><strong>Lunch:</strong> Grilled Chicken Salad</div>
-                <div><strong>Dinner:</strong> Spaghetti Bolognese</div>
-              </q-item-section>
-            </q-item>
-          </q-card-section>
-        </q-card>
+    <!-- Alertas -->
+    <section class="q-mb-xl">
+      <div class="text-subtitle1 text-weight-medium q-mb-sm">Alertas</div>
+      <div class="row q-col-gutter-md">
+        <div v-for="alert in alerts" :key="alert.id" class="col-6">
+          <AlertBanner
+            :type="alert.type"
+            :title="alert.title"
+            :subtitle="alert.subtitle"
+            :progress="alert.progress"
+          />
+        </div>
+      </div>
+    </section>
 
-        <!-- Recently Created Recipes -->
-        <q-card>
-          <q-card-section>
-            <h4>Recent Recipes</h4>
-            <!-- Display the most recent recipes -->
-            <q-item v-for="recipe in recentRecipes" :key="recipe.id" clickable>
-              <q-item-section>{{ recipe.name }}</q-item-section>
-            </q-item>
-          </q-card-section>
-        </q-card>
+    <!-- Hoy -->
+    <section class="q-mb-xl">
+      <div class="text-subtitle1 text-weight-medium q-mb-sm">Hoy</div>
+      <div class="row q-col-gutter-md">
+        <div v-for="meal in meals" :key="meal.id" class="col-4">
+          <MealSlotCard
+            :type="meal.type"
+            :status="meal.status"
+            :recipe="meal.recipe"
+            :members="meal.members"
+            :rescue-message="meal.rescueMessage"
+          />
+        </div>
+      </div>
+    </section>
 
-        <!-- Recipes Suggested by Other Family Members -->
-        <q-card>
-          <q-card-section>
-            <h4>Changes Proposed by Family</h4>
-            <!-- Example of family member changes -->
-            <q-item v-for="change in familyChanges" :key="change.id">
-              <q-item-section>{{ change.name }}: {{ change.change }}</q-item-section>
-            </q-item>
-          </q-card-section>
-        </q-card>
-
-        <!-- Search Bar for Recipes -->
-        <q-card>
-          <q-card-section>
-            <q-input v-model="searchQuery" label="Search Recipe by Ingredient or Name" />
-            <q-btn @click="searchRecipes" label="Search" />
-          </q-card-section>
-        </q-card>
-      </q-page>
-    </q-page-container>
+    <!-- Casa -->
+    <section>
+      <div class="text-subtitle1 text-weight-medium q-mb-sm">Casa</div>
+      <div class="row q-col-gutter-md">
+        <div v-for="member in houseMembers" :key="member.id" class="col-6">
+          <HouseMemberCard
+            :name="member.name"
+            :initial="member.initial"
+            :role="member.role"
+            :is-current-user="member.isCurrentUser"
+            :task="member.task"
+            :task-status="member.taskStatus"
+            :color="member.color"
+          />
+        </div>
+      </div>
+    </section>
+  </q-page>
 </template>
 
-<script lang="ts">
-export default {
-  data() {
-    return {
-      drawer: true,
-      searchQuery: '',
-      recentRecipes: [
-        { id: 1, name: 'Apple Pie' },
-        { id: 2, name: 'Chicken Alfredo' },
-        { id: 3, name: 'Vegan Tacos' }
-      ],
-      familyChanges: [
-        { id: 1, name: 'John', change: 'Changed lunch to a vegetarian dish' },
-        { id: 2, name: 'Anna', change: 'Added extra spices to dinner' }
-      ]
-    };
-  },
-  methods: {
-    logout() {
-      // Handle logout logic
-    },
-    goToSearch() {
-      // Navigate to Search page
-      this.$router.push('/search');
-    },
-    goToGptSearch() {
-      // Navigate to Search GPT page
-      this.$router.push('/search-gpt');
-    },
-    searchRecipes() {
-      // Logic to search recipes based on searchQuery
-    }
-  }
-};
-</script>
+<script setup lang="ts">
+import { computed } from 'vue'
+import MealSlotCard from 'src/components/meals/MealSlotCard.vue'
+import AlertBanner from 'src/components/base/AlertBanner.vue'
+import HouseMemberCard from 'src/components/house/HouseMemberCard.vue'
+import { mockAlerts, mockMeals, mockHouseMembers } from 'src/mocks/home.mock'
 
-<style scoped>
-/* Custom styles */
-</style>
+const alerts = mockAlerts
+const meals = mockMeals
+const houseMembers = mockHouseMembers
+
+const greeting = computed(() => {
+  const h = new Date().getHours()
+  if (h < 12) return 'Buenos días'
+  if (h < 19) return 'Buenas tardes'
+  return 'Buenas noches'
+})
+
+const today = computed(() =>
+  new Date().toLocaleDateString('es-MX', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+)
+</script>

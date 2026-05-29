@@ -10,6 +10,7 @@ const routes: RouteRecordRaw[] = [
     children: [
       { path: '', name: 'home', component: () => import('pages/MySearchPage.vue') },
       { path: 'my-search', name: 'my-search', component: () => import('pages/MySearchPage.vue') },
+      { path: 'home-new', name: 'home-new', component: () => import('pages/HomePage.vue') },
       { path: 'login', name: 'login', component: LoginPage },
       { path: 'auth/callback', component: AuthCallback },
       { path: 'recipe-detail/:id', name: 'recipe-detail', component: RecipeDetail },
