@@ -8,7 +8,7 @@
 import { onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
-import { clearPkceVerifier, getPkceVerifier } from 'boot/cognito'
+import { clearPkceVerifier, getPkceVerifier, parseJwt } from 'boot/cognito'
 
 const router = useRouter()
 const route = useRoute()
@@ -51,6 +51,12 @@ onMounted(async () => {
     localStorage.setItem('id_token', id_token)
     localStorage.setItem('refresh_token', refresh_token)
     localStorage.setItem('expires_at', (Date.now() + expires_in * 1000).toString())
+    const user = parseJwt(id_token)
+    if (user) {
+      console.log('[Cognito] Signed in — user from id_token:', user)
+    } else {
+      console.warn('[Cognito] Signed in but id_token could not be parsed')
+    }
     clearPkceVerifier()
     await router.replace('/my-search')
   } catch (err) {

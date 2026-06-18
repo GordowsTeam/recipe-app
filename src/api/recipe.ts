@@ -71,14 +71,14 @@ const getAuthHeaders = (): Record<string, string> => {
   return headers
 }
 
-/** Headers including X-User-Id from JWT sub (for my-recipes endpoints). */
-const getAuthHeadersWithUserId = (): Record<string, string> => {
+/** Headers including X-User-Email from JWT (for user-scoped recipe endpoints). */
+const getAuthHeadersWithUserEmail = (): Record<string, string> => {
   const headers = getAuthHeaders()
   const token = localStorage.getItem('id_token')
   if (token) {
     try {
-      const payload = JSON.parse(atob(token.split('.')[1] ?? '')) as { sub?: string }
-      if (payload.sub) headers['X-User-Id'] = payload.sub
+      const payload = JSON.parse(atob(token.split('.')[1] ?? '')) as { email?: string }
+      if (payload.email) headers['X-User-Email'] = payload.email
     } catch {
       // ignore
     }
@@ -157,7 +157,7 @@ export async function getMyRecipes(): Promise<Recipe[]> {
   const baseUrl = getBaseUrl()
   const response = await fetch(`${baseUrl}/api/recipe/my-recipes`, {
     method: 'GET',
-    headers: getAuthHeadersWithUserId()
+    headers: getAuthHeadersWithUserEmail()
   })
   if (!response.ok) {
     if (response.status === 401) throw new Error('Login required to view my recipes')
@@ -176,7 +176,7 @@ export async function addMyRecipe(recipeId: string, recipeSourceType: string | n
   const sourceType = typeof recipeSourceType === 'number' ? recipeSourceType : parseInt(String(recipeSourceType), 10) || 2
   const response = await fetch(`${baseUrl}/api/recipe/my-recipes`, {
     method: 'POST',
-    headers: getAuthHeadersWithUserId(),
+    headers: getAuthHeadersWithUserEmail(),
     body: JSON.stringify({ recipeId, recipeSourceType: sourceType })
   })
   if (!response.ok) {
@@ -192,7 +192,7 @@ export async function removeMyRecipe(recipeId: string): Promise<void> {
   const baseUrl = getBaseUrl()
   const response = await fetch(`${baseUrl}/api/recipe/my-recipes/${encodeURIComponent(recipeId)}`, {
     method: 'DELETE',
-    headers: getAuthHeadersWithUserId()
+    headers: getAuthHeadersWithUserEmail()
   })
   if (!response.ok) {
     if (response.status === 401) throw new Error('Login required')
@@ -207,7 +207,7 @@ export async function getFavorites(): Promise<Recipe[]> {
   const baseUrl = getBaseUrl()
   const response = await fetch(`${baseUrl}/api/recipe/favorites`, {
     method: 'GET',
-    headers: getAuthHeadersWithUserId()
+    headers: getAuthHeadersWithUserEmail()
   })
   if (!response.ok) {
     if (response.status === 401) throw new Error('Login required to view favorites')
@@ -226,7 +226,7 @@ export async function addFavorite(recipeId: string, recipeSourceType: string | n
   const sourceType = typeof recipeSourceType === 'number' ? recipeSourceType : parseInt(String(recipeSourceType), 10) || 2
   const response = await fetch(`${baseUrl}/api/recipe/favorites`, {
     method: 'POST',
-    headers: getAuthHeadersWithUserId(),
+    headers: getAuthHeadersWithUserEmail(),
     body: JSON.stringify({ recipeId, recipeSourceType: sourceType })
   })
   if (!response.ok) {
@@ -242,7 +242,7 @@ export async function removeFavorite(recipeId: string): Promise<void> {
   const baseUrl = getBaseUrl()
   const response = await fetch(`${baseUrl}/api/recipe/favorites/${encodeURIComponent(recipeId)}`, {
     method: 'DELETE',
-    headers: getAuthHeadersWithUserId()
+    headers: getAuthHeadersWithUserEmail()
   })
   if (!response.ok) {
     if (response.status === 401) throw new Error('Login required')
@@ -266,7 +266,7 @@ export async function createMyRecipe(request: CreateUserRecipeRequest): Promise<
   const baseUrl = getBaseUrl()
   const response = await fetch(`${baseUrl}/api/recipe/my-recipes/create`, {
     method: 'POST',
-    headers: getAuthHeadersWithUserId(),
+    headers: getAuthHeadersWithUserEmail(),
     body: JSON.stringify({
       name: request.name,
       description: request.description ?? '',
