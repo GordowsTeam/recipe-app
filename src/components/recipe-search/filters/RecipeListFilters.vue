@@ -6,7 +6,7 @@
         outlined
         dense
         clearable
-        placeholder="Filter by name"
+        placeholder="Filtrar por nombre"
         class="filter-input filter-name"
         @keyup.enter.prevent
       >
@@ -21,7 +21,7 @@
         dense
         type="number"
         min="0"
-        placeholder="Min cal"
+        placeholder="Cal mín"
         class="filter-input filter-calories"
         clearable
       >
@@ -36,7 +36,7 @@
         dense
         type="number"
         min="0"
-        placeholder="Max cal"
+        placeholder="Cal máx"
         class="filter-input filter-calories"
         clearable
       />
@@ -47,7 +47,7 @@
         dense
         type="number"
         min="0"
-        placeholder="Min min"
+        placeholder="Min mín"
         class="filter-input filter-time"
         clearable
       >
@@ -62,7 +62,7 @@
         dense
         type="number"
         min="0"
-        placeholder="Max min"
+        placeholder="Min máx"
         class="filter-input filter-time"
         clearable
       />
@@ -71,7 +71,7 @@
         v-if="hasActiveFilters"
         flat
         dense
-        label="Clear"
+        label="Limpiar"
         icon="clear"
         color="grey"
         no-caps

@@ -29,7 +29,7 @@
               outlined
               dense
               v-model="searchText"
-              :label="searchMode === 'ingredient' ? 'Add ingredient' : 'Search recipe'"
+              :label="searchMode === 'ingredient' ? 'Añadir ingrediente' : 'Buscar receta'"
               @keyup.enter="searchMode === 'ingredient' ? addIngredient() : triggerSearch()"
             >
               <template #prepend>
@@ -39,14 +39,14 @@
                       <q-item-section avatar>
                         <q-icon name="restaurant_menu" />
                       </q-item-section>
-                      <q-item-section>By Recipe</q-item-section>
+                      <q-item-section>Por receta</q-item-section>
                     </q-item>
 
                     <q-item clickable v-close-popup @click="searchMode = 'ingredient'">
                       <q-item-section avatar>
                         <q-icon name="spa" />
                       </q-item-section>
-                      <q-item-section>By Ingredient</q-item-section>
+                      <q-item-section>Por ingrediente</q-item-section>
                     </q-item>
                   </q-list>
                 </q-btn-dropdown>
@@ -121,7 +121,7 @@
 
         <q-btn
           v-else
-          label="Login"
+          label="Iniciar sesión"
           color="primary"
           flat
           @click="goTo('login')"
@@ -137,15 +137,15 @@
     >
       <q-list>
         <q-item-label header class="text-grey-8">
-          Navigation
+          Navegación
         </q-item-label>
         <q-item clickable v-ripple @click="goTo('home')">
           <q-item-section avatar>
             <q-icon name="home" />
           </q-item-section>
           <q-item-section>
-            <q-item-label>Home</q-item-label>
-            <q-item-label caption>Browse recipes</q-item-label>
+            <q-item-label>Inicio</q-item-label>
+            <q-item-label caption>Explorar recetas</q-item-label>
           </q-item-section>
         </q-item>
         <q-item clickable v-ripple @click="goTo('favorites')" v-if="isAuthenticated">
@@ -153,8 +153,8 @@
             <q-icon name="favorite" />
           </q-item-section>
           <q-item-section>
-            <q-item-label>Favorites</q-item-label>
-            <q-item-label caption>Your saved recipes</q-item-label>
+            <q-item-label>Favoritos</q-item-label>
+            <q-item-label caption>Tus recetas guardadas</q-item-label>
           </q-item-section>
         </q-item>
         <q-item clickable v-ripple @click="goTo('my-recipes')" v-if="isAuthenticated">
@@ -162,8 +162,8 @@
             <q-icon name="restaurant_menu" />
           </q-item-section>
           <q-item-section>
-            <q-item-label>My Recipes</q-item-label>
-            <q-item-label caption>Your recipes</q-item-label>
+            <q-item-label>Mis recetas</q-item-label>
+            <q-item-label caption>Tus recetas</q-item-label>
           </q-item-section>
         </q-item>
         <q-item clickable v-ripple @click="goTo('upload-recipe')" v-if="isAuthenticated">
@@ -171,21 +171,21 @@
             <q-icon name="upload" />
           </q-item-section>
           <q-item-section>
-            <q-item-label>Upload Recipe</q-item-label>
-            <q-item-label caption>Share your recipe</q-item-label>
+            <q-item-label>Subir receta</q-item-label>
+            <q-item-label caption>Comparte tu receta</q-item-label>
           </q-item-section>
         </q-item>
         <q-separator spaced />
         <q-item-label header class="text-grey-8" v-if="isAuthenticated">
-          Account
+          Cuenta
         </q-item-label>
         <q-item clickable v-ripple @click="goTo('profile')" v-if="isAuthenticated">
           <q-item-section avatar>
             <q-icon name="account_circle" />
           </q-item-section>
           <q-item-section>
-            <q-item-label>Profile</q-item-label>
-            <q-item-label caption>View your profile</q-item-label>
+            <q-item-label>Perfil</q-item-label>
+            <q-item-label caption>Ver tu perfil</q-item-label>
           </q-item-section>
         </q-item>
         <q-item clickable v-ripple @click="goTo('settings')" v-if="isAuthenticated">
@@ -193,8 +193,8 @@
             <q-icon name="settings" />
           </q-item-section>
           <q-item-section>
-            <q-item-label>Settings</q-item-label>
-            <q-item-label caption>App settings</q-item-label>
+            <q-item-label>Configuración</q-item-label>
+            <q-item-label caption>Ajustes de la aplicación</q-item-label>
           </q-item-section>
         </q-item>
         <q-separator spaced v-if="isAuthenticated" />
@@ -203,7 +203,7 @@
             <q-icon name="logout" color="red" />
           </q-item-section>
           <q-item-section>
-            <q-item-label class="text-red">Logout</q-item-label>
+            <q-item-label class="text-red">Cerrar sesión</q-item-label>
           </q-item-section>
         </q-item>
         <q-item clickable v-ripple @click="goTo('login')" v-if="!isAuthenticated">
@@ -211,8 +211,8 @@
             <q-icon name="login" />
           </q-item-section>
           <q-item-section>
-            <q-item-label>Login</q-item-label>
-            <q-item-label caption>Sign in to your account</q-item-label>
+            <q-item-label>Iniciar sesión</q-item-label>
+            <q-item-label caption>Accede a tu cuenta</q-item-label>
           </q-item-section>
         </q-item>
       </q-list>
@@ -298,12 +298,12 @@ const addIngredient = () => {
   if (!searchText.value.trim()) return
   ingredientList.value.push({ name: searchText.value.trim() })
   searchText.value = ''
-  Notify.create({ type: 'positive', message: 'Ingredient added' })
+  Notify.create({ type: 'positive', message: 'Ingrediente añadido' })
 }
 
 const removeIngredient = (name: string) => {
   ingredientList.value = ingredientList.value.filter(i => i.name !== name)
-  Notify.create({ type: 'info', message: 'Ingredient removed' })
+  Notify.create({ type: 'info', message: 'Ingrediente eliminado' })
 }
 
 const triggerSearch = () => {

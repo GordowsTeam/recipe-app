@@ -49,8 +49,8 @@ export async function getUserInfo(): Promise<UserResponse> {
     headers: getAuthHeadersWithUserEmail()
   })
   if (!response.ok) {
-    if (response.status === 401) throw new Error('Login required')
-    throw new Error('Failed to load profile')
+    if (response.status === 401) throw new Error('Inicia sesión')
+    throw new Error('No se pudo cargar el perfil')
   }
   return (await response.json()) as UserResponse
 }
@@ -65,9 +65,9 @@ export async function getUserMe(): Promise<UserResponse> {
     headers: getAuthHeadersWithUserEmail()
   })
   if (!response.ok) {
-    if (response.status === 401) throw new Error('Login required')
-    if (response.status === 404) throw new Error('User not found')
-    throw new Error('Failed to load user')
+    if (response.status === 401) throw new Error('Inicia sesión')
+    if (response.status === 404) throw new Error('Usuario no encontrado')
+    throw new Error('No se pudo cargar el usuario')
   }
   const data = (await response.json()) as UserResponse
   return data
@@ -88,8 +88,8 @@ export async function upsertUserMe(request: CreateOrUpdateUserRequest): Promise<
     })
   })
   if (!response.ok) {
-    if (response.status === 401) throw new Error('Login required')
-    throw new Error('Failed to save user')
+    if (response.status === 401) throw new Error('Inicia sesión')
+    throw new Error('No se pudo guardar el usuario')
   }
   return (await response.json()) as UserResponse
 }
@@ -113,7 +113,7 @@ export async function addUserFavorite(recipeId: string, recipeSourceType: number
     body: JSON.stringify({ recipeId, recipeSourceType })
   })
   if (!response.ok) {
-    if (response.status === 401) throw new Error('Login required to add favorites')
-    throw new Error('Failed to add favorite')
+    if (response.status === 401) throw new Error('Inicia sesión para añadir favoritos')
+    throw new Error('No se pudo añadir a favoritos')
   }
 }

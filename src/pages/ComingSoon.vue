@@ -8,7 +8,7 @@
         unelevated
         color="primary"
         :to="{ name: 'home' }"
-        label="Back to Home"
+        label="Volver al inicio"
         no-caps
       />
     </div>
@@ -25,6 +25,6 @@ function metaString(value: unknown, fallback: string): string {
   return typeof value === 'string' ? value : fallback
 }
 
-const title = computed<string>(() => metaString(route.meta?.title, 'Coming Soon'))
-const message = computed<string>(() => metaString(route.meta?.message, 'This section is not available yet.'))
+const title = computed<string>(() => metaString(route.meta?.title, 'Próximamente'))
+const message = computed<string>(() => metaString(route.meta?.message, 'Esta sección aún no está disponible.'))
 </script>

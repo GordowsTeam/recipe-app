@@ -1,17 +1,44 @@
 import type { Recipe } from 'src/interfaces/RecipeResponse'
 
-function normalizeImage(img: Record<string, unknown>): Recipe['images'][0] {
-  const url = (img.Url ?? img.url ?? '') as string
-  const main = typeof (img.Main ?? img.main) === 'boolean' ? (img.Main ?? img.main) as boolean : false
-  return { url, main }
+function toImageUrl(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function normalizeImage(img: unknown, index: number): Recipe['images'][0] {
+  if (typeof img === 'string') {
+    return { url: img.trim(), main: index === 0 }
+  }
+  if (img && typeof img === 'object') {
+    const record = img as Record<string, unknown>
+    const rawUrl: unknown = record.Url ?? record.url
+    const url = toImageUrl(rawUrl)
+    const main =
+      typeof (record.Main ?? record.main) === 'boolean'
+        ? ((record.Main ?? record.main) as boolean)
+        : index === 0
+    return { url, main }
+  }
+  return { url: '', main: false }
 }
 
 /** Normalize API response (PascalCase or camelCase) to frontend Recipe shape. */
 function normalizeRecipe(r: Record<string, unknown>, defaults?: { isFavorite?: boolean; isSaved?: boolean }): Recipe {
   const id = (r.Id ?? r.id ?? '') as string
   const name = (r.Name ?? r.name ?? '') as string
-  const rawImages = (r.Images ?? r.images ?? []) as Record<string, unknown>[]
-  const images = Array.isArray(rawImages) ? rawImages.map(normalizeImage) : []
+  const rawImages = r.Images ?? r.images
+  let images: Recipe['images'] = []
+  if (Array.isArray(rawImages)) {
+    images = rawImages
+      .map((img, index) => normalizeImage(img, index))
+      .filter((img) => img.url.length > 0)
+  } else if (typeof rawImages === 'string' && rawImages.trim()) {
+    images = [{ url: rawImages.trim(), main: true }]
+  }
+  if (images.length === 0) {
+    const rawRootImage: unknown = r.Image ?? r.image
+    const rootImage = toImageUrl(rawRootImage)
+    if (rootImage) images = [{ url: rootImage, main: true }]
+  }
   const ingredients = (r.Ingredients ?? r.ingredients ?? []) as Recipe['ingredients']
   const missingIngredients = (r.MissingIngredients ?? r.missingIngredients ?? []) as string[]
   const calories = Number(r.Calories ?? r.calories ?? 0)
@@ -101,9 +128,10 @@ export async function getRecipes(params: GetRecipesParams): Promise<Recipe[]> {
     body: JSON.stringify({ ingredients: params.ingredients })
   })
   if (!response.ok) {
-    throw new Error('Failed to fetch recipes')
+    throw new Error('Error al buscar recetas')
   }
-  return (await response.json()) as Recipe[]
+  const raw = (await response.json()) as Record<string, unknown>[]
+  return Array.isArray(raw) ? raw.map((r) => normalizeRecipe(r)) : []
 }
 
 /**
@@ -123,12 +151,13 @@ export async function getRecipeById(recipeId: string, recipeSourceType?: string)
     headers: getAuthHeaders()
   })
   if (response.status === 404) {
-    throw new Error('Recipe not found')
+    throw new Error('Receta no encontrada')
   }
   if (!response.ok) {
-    throw new Error('Failed to load recipe')
+    throw new Error('No se pudo cargar la receta')
   }
-  return (await response.json()) as Recipe
+  const raw = (await response.json()) as Record<string, unknown>
+  return normalizeRecipe(raw)
 }
 
 /**
@@ -144,7 +173,7 @@ export async function getLatestRecipes(count = 5): Promise<Recipe[]> {
     headers: getAuthHeaders()
   })
   if (!response.ok) {
-    throw new Error('Failed to load latest recipes')
+    throw new Error('No se pudieron cargar las recetas recientes')
   }
   const raw = (await response.json()) as Record<string, unknown>[]
   return Array.isArray(raw) ? raw.map((r) => normalizeRecipe(r)) : []
@@ -160,8 +189,8 @@ export async function getMyRecipes(): Promise<Recipe[]> {
     headers: getAuthHeadersWithUserEmail()
   })
   if (!response.ok) {
-    if (response.status === 401) throw new Error('Login required to view my recipes')
-    throw new Error('Failed to load my recipes')
+    if (response.status === 401) throw new Error('Inicia sesión para ver tus recetas')
+    throw new Error('No se pudieron cargar mis recetas')
   }
   const raw = (await response.json()) as Record<string, unknown>[]
   return Array.isArray(raw) ? raw.map((r) => normalizeRecipe(r, { isSaved: true })) : []
@@ -180,8 +209,8 @@ export async function addMyRecipe(recipeId: string, recipeSourceType: string | n
     body: JSON.stringify({ recipeId, recipeSourceType: sourceType })
   })
   if (!response.ok) {
-    if (response.status === 401) throw new Error('Login required to add recipes')
-    throw new Error('Failed to add recipe')
+    if (response.status === 401) throw new Error('Inicia sesión para añadir recetas')
+    throw new Error('No se pudo añadir la receta')
   }
 }
 
@@ -195,8 +224,8 @@ export async function removeMyRecipe(recipeId: string): Promise<void> {
     headers: getAuthHeadersWithUserEmail()
   })
   if (!response.ok) {
-    if (response.status === 401) throw new Error('Login required')
-    throw new Error('Failed to remove recipe')
+    if (response.status === 401) throw new Error('Inicia sesión')
+    throw new Error('No se pudo eliminar la receta')
   }
 }
 
@@ -210,8 +239,8 @@ export async function getFavorites(): Promise<Recipe[]> {
     headers: getAuthHeadersWithUserEmail()
   })
   if (!response.ok) {
-    if (response.status === 401) throw new Error('Login required to view favorites')
-    throw new Error('Failed to load favorites')
+    if (response.status === 401) throw new Error('Inicia sesión para ver tus favoritos')
+    throw new Error('No se pudieron cargar los favoritos')
   }
   const raw = (await response.json()) as Record<string, unknown>[]
   return Array.isArray(raw) ? raw.map((r) => normalizeRecipe(r, { isFavorite: true })) : []
@@ -230,8 +259,8 @@ export async function addFavorite(recipeId: string, recipeSourceType: string | n
     body: JSON.stringify({ recipeId, recipeSourceType: sourceType })
   })
   if (!response.ok) {
-    if (response.status === 401) throw new Error('Login required to add favorites')
-    throw new Error('Failed to add favorite')
+    if (response.status === 401) throw new Error('Inicia sesión para añadir favoritos')
+    throw new Error('No se pudo añadir a favoritos')
   }
 }
 
@@ -245,8 +274,8 @@ export async function removeFavorite(recipeId: string): Promise<void> {
     headers: getAuthHeadersWithUserEmail()
   })
   if (!response.ok) {
-    if (response.status === 401) throw new Error('Login required')
-    throw new Error('Failed to remove favorite')
+    if (response.status === 401) throw new Error('Inicia sesión')
+    throw new Error('No se pudo eliminar de favoritos')
   }
 }
 
@@ -277,9 +306,9 @@ export async function createMyRecipe(request: CreateUserRecipeRequest): Promise<
     })
   })
   if (!response.ok) {
-    if (response.status === 401) throw new Error('Login required to create recipes')
-    if (response.status === 400) throw new Error('Invalid recipe. Name is required.')
-    throw new Error('Failed to create recipe')
+    if (response.status === 401) throw new Error('Inicia sesión para crear recetas')
+    if (response.status === 400) throw new Error('Receta no válida. El nombre es obligatorio.')
+    throw new Error('No se pudo crear la receta')
   }
   return (await response.json()) as Recipe
 }

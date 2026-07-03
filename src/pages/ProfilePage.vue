@@ -1,10 +1,10 @@
 <template>
   <q-page class="q-pa-md profile-page">
-    <div class="text-h5 q-mb-md">Profile</div>
+    <div class="text-h5 q-mb-md">Perfil</div>
 
     <div v-if="!isAuthenticated" class="text-body1 text-grey-7 q-mb-md">
-      Sign in to view your profile.
-      <q-btn flat color="primary" label="Login" class="q-ml-sm" @click="goLogin" />
+      Inicia sesión para ver tu perfil.
+      <q-btn flat color="primary" label="Iniciar sesión" class="q-ml-sm" @click="goLogin" />
     </div>
 
     <template v-else>
@@ -14,7 +14,7 @@
         </template>
         {{ error }}
         <template #action>
-          <q-btn flat dense label="Retry" @click="loadProfile" />
+          <q-btn flat dense label="Reintentar" @click="loadProfile" />
         </template>
       </q-banner>
 
@@ -37,31 +37,31 @@
           <q-list bordered separator class="rounded-borders">
             <q-item>
               <q-item-section>
-                <q-item-label caption>Account ID</q-item-label>
+                <q-item-label caption>ID de cuenta</q-item-label>
                 <q-item-label>{{ user.id }}</q-item-label>
               </q-item-section>
             </q-item>
             <q-item v-if="tokenPayload?.sub">
               <q-item-section>
-                <q-item-label caption>Cognito subject</q-item-label>
+                <q-item-label caption>Identificador Cognito</q-item-label>
                 <q-item-label class="text-wrap">{{ tokenPayload.sub }}</q-item-label>
               </q-item-section>
             </q-item>
             <q-item v-if="cognitoUsernameFromToken">
               <q-item-section>
-                <q-item-label caption>Cognito username</q-item-label>
+                <q-item-label caption>Usuario Cognito</q-item-label>
                 <q-item-label class="text-wrap">{{ cognitoUsernameFromToken }}</q-item-label>
               </q-item-section>
             </q-item>
             <q-item>
               <q-item-section>
-                <q-item-label caption>Member since</q-item-label>
+                <q-item-label caption>Miembro desde</q-item-label>
                 <q-item-label>{{ formatDateTime(user.createdDateTime) }}</q-item-label>
               </q-item-section>
             </q-item>
             <q-item>
               <q-item-section>
-                <q-item-label caption>Last updated</q-item-label>
+                <q-item-label caption>Última actualización</q-item-label>
                 <q-item-label>{{ formatDateTime(user.updatedDateTime) }}</q-item-label>
               </q-item-section>
             </q-item>
@@ -70,14 +70,14 @@
 
         <q-card flat bordered>
           <q-card-section>
-            <div class="text-subtitle1 q-mb-sm">Display name</div>
+            <div class="text-subtitle1 q-mb-sm">Nombre para mostrar</div>
             <div class="row q-col-gutter-sm items-end">
               <div class="col-12 col-sm-8">
                 <q-input
                   v-model="displayNameEdit"
                   outlined
                   dense
-                  label="How your name appears in the app"
+                  label="Cómo aparece tu nombre en la app"
                   maxlength="120"
                   :disable="saving"
                 />
@@ -85,7 +85,7 @@
               <div class="col-12 col-sm-auto">
                 <q-btn
                   color="primary"
-                  label="Save"
+                  label="Guardar"
                   :loading="saving"
                   :disable="!displayNameDirty"
                   @click="saveDisplayName"
@@ -131,7 +131,7 @@ const cognitoUsernameFromToken = computed(() => {
 const displayLabel = computed(() => {
   if (user.value?.displayName?.trim()) return user.value.displayName.trim()
   if (user.value?.email) return user.value.email
-  return 'Your profile'
+  return 'Tu perfil'
 })
 
 const avatarLetter = computed(() => {
@@ -148,7 +148,7 @@ const displayNameDirty = computed(() => {
 function formatDateTime(iso?: string): string {
   if (!iso) return '—'
   try {
-    return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(
+    return new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium', timeStyle: 'short' }).format(
       new Date(iso)
     )
   } catch {
@@ -172,7 +172,7 @@ const loadProfile = async () => {
     user.value = u
     displayNameEdit.value = u.displayName?.trim() ?? ''
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Failed to load profile'
+    const msg = e instanceof Error ? e.message : 'No se pudo cargar el perfil'
     error.value = msg
     user.value = null
   } finally {
@@ -189,9 +189,9 @@ const saveDisplayName = async () => {
     })
     user.value = updated
     displayNameEdit.value = updated.displayName?.trim() ?? ''
-    Notify.create({ type: 'positive', message: 'Profile saved' })
+    Notify.create({ type: 'positive', message: 'Perfil guardado' })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Failed to save'
+    const msg = e instanceof Error ? e.message : 'No se pudo guardar'
     Notify.create({ type: 'negative', message: msg })
   } finally {
     saving.value = false

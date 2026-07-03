@@ -27,7 +27,7 @@ const routes: RouteRecordRaw[] = [
         path: 'upload-recipe',
         name: 'upload-recipe',
         component: () => import('pages/ComingSoon.vue'),
-        meta: { title: 'Upload Recipe', message: 'Share your own recipe with the community.' }
+        meta: { title: 'Subir receta', message: 'Comparte tu receta con la comunidad.' }
       },
       {
         path: 'profile',
@@ -38,7 +38,7 @@ const routes: RouteRecordRaw[] = [
         path: 'settings',
         name: 'settings',
         component: () => import('pages/ComingSoon.vue'),
-        meta: { title: 'Settings', message: 'App settings and preferences.' }
+        meta: { title: 'Configuración', message: 'Ajustes y preferencias de la aplicación.' }
       }
     ],
   },

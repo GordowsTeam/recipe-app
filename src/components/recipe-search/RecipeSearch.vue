@@ -14,8 +14,8 @@
         <div v-else-if="featureRecipe" class="editorial-feature">
           <div class="feature-img-wrapper">
             <img
-              v-if="mainImageUrl(featureRecipe)"
-              :src="mainImageUrl(featureRecipe)"
+              v-if="getRecipeMainImageUrl(featureRecipe)"
+              :src="getRecipeMainImageUrl(featureRecipe)"
               class="feature-img"
               alt=""
             />
@@ -28,13 +28,13 @@
               color="primary"
               icon="open_in_new"
               class="feature-details-btn"
-              aria-label="View recipe details"
+              aria-label="Ver detalles de la receta"
               @click.stop="goToRecipe(featureRecipe)"
             />
           </div>
           <div class="feature-meta">
             <div class="feature-title">{{ featureRecipe.name }}</div>
-            <div class="feature-subtitle">{{ featureRecipe.totalTime }} min · {{ featureRecipe.calories }} cal</div>
+            <div class="feature-subtitle">{{ featureRecipe.totalTime }} min · {{ featureRecipe.calories }} kcal</div>
           </div>
         </div>
         <div v-else class="editorial-feature">
@@ -42,13 +42,13 @@
             <q-icon name="restaurant" size="48px" />
           </div>
           <div class="feature-meta">
-            <div class="feature-title text-grey-7">No recipe to show yet</div>
+            <div class="feature-title text-grey-7">Aún no hay receta para mostrar</div>
           </div>
         </div>
 
         <!-- RIGHT: Latest recipes (from API) -->
         <div class="editorial-latest">
-          <div class="latest-title">The Latest</div>
+          <div class="latest-title">Lo último</div>
           <div v-if="loadingTopRated">
             <div v-for="i in 5" :key="'latest-skel-' + i" class="latest-item">
               <q-skeleton type="QAvatar" size="80px" class="latest-thumb" />
@@ -66,8 +66,8 @@
               @click="selectAsFeature(r)"
             >
               <img
-                v-if="mainImageUrl(r)"
-                :src="mainImageUrl(r)"
+                v-if="getRecipeMainImageUrl(r)"
+                :src="getRecipeMainImageUrl(r)"
                 class="latest-thumb"
                 alt=""
               />
@@ -75,7 +75,7 @@
                 <q-icon name="restaurant" size="24px" />
               </div>
               <div class="latest-info">
-                <div class="latest-category">{{ r.totalTime }} MIN · {{ r.calories }} CAL</div>
+                <div class="latest-category">{{ r.totalTime }} MIN · {{ r.calories }} KCAL</div>
                 <div class="latest-name">{{ r.name }}</div>
               </div>
             </div>
@@ -87,15 +87,15 @@
 
       <!-- SECTION: Your recipes -->
       <div class="q-mt-lg">
-        <div class="section-title">🧑‍🍳 Your recipes</div>
+        <div class="section-title">🧑‍🍳 Tus recetas</div>
         <div v-if="loadingMyRecipes" class="section-scroll">
           <q-skeleton v-for="i in 4" :key="'my-skel-' + i" class="section-card section-card-skeleton" />
         </div>
         <div v-else-if="!isAuthenticated" class="section-placeholder">
-          Sign in to see your recipes.
+          Inicia sesión para ver tus recetas.
         </div>
         <div v-else-if="myRecipes.length === 0" class="section-placeholder">
-          You haven't added any recipes yet.
+          Aún no has añadido recetas.
         </div>
         <div v-else class="section-scroll">
           <q-card
@@ -115,7 +115,7 @@
             </div>
             <q-card-section class="section-card-body">
               <div class="section-card-name">{{ r.name }}</div>
-              <div class="section-card-meta">{{ r.totalTime }} min · {{ r.calories }} cal</div>
+              <div class="section-card-meta">{{ r.totalTime }} min · {{ r.calories }} kcal</div>
             </q-card-section>
           </q-card>
         </div>
@@ -123,15 +123,15 @@
 
       <!-- SECTION: Favorites -->
       <div class="q-mt-lg">
-        <div class="section-title">❤️ Favorite recipes</div>
+        <div class="section-title">❤️ Recetas favoritas</div>
         <div v-if="loadingFavorites" class="section-scroll">
           <q-skeleton v-for="i in 4" :key="'fav-skel-' + i" class="section-card section-card-skeleton" />
         </div>
         <div v-else-if="!isAuthenticated" class="section-placeholder">
-          Sign in to see your favorites.
+          Inicia sesión para ver tus favoritos.
         </div>
         <div v-else-if="favoritesRecipes.length === 0" class="section-placeholder">
-          No favorites yet. Use the heart icon on a recipe to add it here.
+          Aún no tienes favoritos. Usa el icono del corazón en una receta para añadirla aquí.
         </div>
         <div v-else class="section-scroll">
           <q-card
@@ -151,7 +151,7 @@
             </div>
             <q-card-section class="section-card-body">
               <div class="section-card-name">{{ r.name }}</div>
-              <div class="section-card-meta">{{ r.totalTime }} min · {{ r.calories }} cal</div>
+              <div class="section-card-meta">{{ r.totalTime }} min · {{ r.calories }} kcal</div>
             </q-card-section>
           </q-card>
         </div>
@@ -159,12 +159,12 @@
 
       <!-- SECTION: Top rated -->
       <div class="q-mt-lg">
-        <div class="section-title">🔝 Top rated</div>
+        <div class="section-title">🔝 Mejor valoradas</div>
         <div v-if="loadingTopRated" class="section-scroll">
           <q-skeleton v-for="i in 4" :key="'top-skel-' + i" class="section-card section-card-skeleton" />
         </div>
         <div v-else-if="topRatedRecipes.length === 0" class="section-placeholder">
-          No recipes to show yet.
+          Aún no hay recetas para mostrar.
         </div>
         <div v-else class="section-scroll">
           <q-card
@@ -184,7 +184,7 @@
             </div>
             <q-card-section class="section-card-body">
               <div class="section-card-name">{{ r.name }}</div>
-              <div class="section-card-meta">{{ r.totalTime }} min · {{ r.calories }} cal</div>
+              <div class="section-card-meta">{{ r.totalTime }} min · {{ r.calories }} kcal</div>
             </q-card-section>
           </q-card>
         </div>
@@ -210,6 +210,7 @@ import type { Recipe } from 'src/interfaces/RecipeResponse'
 import { getRecipes as getRecipesApi, getMyRecipes, getFavorites, getLatestRecipes } from 'src/api/recipe'
 import { useRecipeFavorites } from 'src/composables/useRecipeFavorites'
 import { parseJwt } from 'boot/cognito'
+import { getRecipeMainImageUrl } from 'src/utils/recipeImages'
 
 /* -------------------------
         TYPES
@@ -296,9 +297,6 @@ const loadSectionRecipes = async (): Promise<void> => {
   }
 }
 
-const mainImageUrl = (recipe: Recipe): string =>
-  recipe.images?.find(img => img.main)?.url ?? recipe.images?.[0]?.url ?? ''
-
 /** Set a recipe as the big feature recipe (used when clicking a latest recipe). */
 const selectAsFeature = (recipe: Recipe) => {
   featureRecipe.value = recipe
@@ -311,7 +309,8 @@ const goToRecipe = (recipe: Recipe) => {
   void router.push({
     name: 'recipe-detail',
     params: { id },
-    query: { sourceTypeId }
+    query: { sourceTypeId },
+    state: { imageUrl: getRecipeMainImageUrl(recipe) }
   })
 }
 
@@ -328,7 +327,7 @@ const getRecipes = async (): Promise<void> => {
     list.forEach(applyToRecipe)
     recipes.value = list
   } catch {
-    Notify.create({ type: 'negative', message: 'Error fetching recipes' })
+    Notify.create({ type: 'negative', message: 'Error al buscar recetas' })
   } finally {
     loading.value = false
   }

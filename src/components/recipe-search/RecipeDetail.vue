@@ -4,7 +4,7 @@
       flat
       dense
       icon="arrow_back"
-      label="Return"
+      label="Volver"
       class="q-mb-md"
       @click="goBack"
     />
@@ -16,18 +16,11 @@
       </template>
       {{ error }}
       <template #action>
-        <q-btn flat dense label="Retry" @click="loadRecipe" />
+        <q-btn flat dense label="Reintentar" @click="loadRecipe" />
       </template>
     </q-banner>
 
-    <q-card v-else-if="recipe">
-      <q-img
-        v-if="recipe.images?.length"
-        :src="recipe.images.find((img) => img.main)?.url"
-        alt="Recipe"
-        class="recipe-detail-img q-mb-md"
-        ratio="16/9"
-      />
+    <q-card v-else-if="recipe" class="recipe-detail-card">
       <q-card-section>
         <div class="row items-center justify-between q-mb-sm">
           <div class="text-h5">{{ recipe.name }}</div>
@@ -57,29 +50,35 @@
             />
           </div>
         </div>
-        <div class="text-subtitle2 text-grey-7">Calories: {{ recipe.calories }} · {{ recipe.totalTime }} min</div>
+        <img
+          v-if="mainImageUrl"
+          :src="mainImageUrl"
+          :alt="recipe.name"
+          class="recipe-detail-img q-mb-md"
+        />
+        <div class="text-subtitle2 text-grey-7">Calorías: {{ recipe.calories }} · {{ recipe.totalTime }} min</div>
         <p v-if="recipe.description" class="q-mt-md recipe-description">{{ recipe.description }}</p>
       </q-card-section>
       <q-card-section v-if="recipe.cuisinTypes?.length">
-        <div class="text-h6 q-mb-sm">Cuisine Types</div>
+        <div class="text-h6 q-mb-sm">Tipos de cocina</div>
         <ul class="cuisine-types-list">
           <li v-for="(cuisine, idx) in recipe.cuisinTypes" :key="idx" class="cuisine-type-item">{{ cuisine }}</li>
         </ul>
       </q-card-section>
       <q-card-section>
-        <div class="text-h6 q-mb-sm">Ingredients</div>
+        <div class="text-h6 q-mb-sm">Ingredientes</div>
         <ul class="ingredients-list">
           <li v-for="(ingredient, idx) in recipe.ingredients" :key="idx" class="ingredient-item">{{ ingredient.text }}</li>
         </ul>
       </q-card-section>
       <q-card-section v-if="recipe.directions?.length">
-        <div class="text-h6 q-mb-sm">Directions</div>
+        <div class="text-h6 q-mb-sm">Instrucciones</div>
         <div v-for="(direction, idx) in recipe.directions" :key="idx" class="direction-step q-mt-md">
-          <div class="text-subtitle2 text-weight-medium">Step {{ idx + 1 }}</div>
+          <div class="text-subtitle2 text-weight-medium">Paso {{ idx + 1 }}</div>
           <q-img
             v-if="direction.image"
             :src="direction.image"
-            alt="Step"
+            alt="Paso"
             class="q-mt-sm reduced-img rounded-borders"
             style="max-height: 200px; object-fit: cover;"
           />
@@ -89,14 +88,15 @@
     </q-card>
   </div>
 </template>
-  
+
 <script lang="ts" setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Notify } from 'quasar'
 import type { Recipe } from '../../interfaces/RecipeResponse'
 import { getRecipeById, addMyRecipe, removeMyRecipe } from 'src/api/recipe'
 import { useRecipeFavorites } from 'src/composables/useRecipeFavorites'
+import { getRecipeMainImageUrl } from 'src/utils/recipeImages'
 
 const route = useRoute()
 const router = useRouter()
@@ -106,14 +106,20 @@ const onToggleFavorite = async () => {
   if (!recipe.value) return
   try {
     await toggleFavorite(recipe.value)
-    Notify.create({ type: 'positive', message: recipe.value.isFavorite ? 'Added to favorites' : 'Removed from favorites' })
+    Notify.create({ type: 'positive', message: recipe.value.isFavorite ? 'Añadido a favoritos' : 'Eliminado de favoritos' })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Failed to update favorite'
+    const msg = e instanceof Error ? e.message : 'No se pudo actualizar el favorito'
     Notify.create({ type: 'negative', message: msg })
   }
 }
 
 const recipe = ref<Recipe | null>(null)
+const pendingImageUrl = ref(
+  typeof history.state?.imageUrl === 'string' ? history.state.imageUrl.trim() : ''
+)
+const mainImageUrl = computed(
+  () => getRecipeMainImageUrl(recipe.value) || pendingImageUrl.value
+)
 const loading = ref(true)
 const error = ref('')
 const addingToMyRecipes = ref(false)
@@ -137,14 +143,17 @@ const loadRecipe = async () => {
   recipe.value = null
   loading.value = true
   error.value = ''
+  if (typeof history.state?.imageUrl === 'string') {
+    pendingImageUrl.value = history.state.imageUrl.trim()
+  }
   try {
     const sourceType = sourceTypeId()
     const data = await getRecipeById(id, sourceType)
     applyToRecipe(data)
     recipe.value = data
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Could not load this recipe.'
-    error.value = msg === 'Recipe not found' ? 'Recipe not found.' : 'Could not load this recipe. Check your connection and try again.'
+    const msg = e instanceof Error ? e.message : 'No se pudo cargar esta receta.'
+    error.value = msg === 'Receta no encontrada' ? 'Receta no encontrada.' : 'No se pudo cargar esta receta. Comprueba tu conexión e inténtalo de nuevo.'
   } finally {
     loading.value = false
   }
@@ -173,14 +182,14 @@ const toggleMyRecipe = async () => {
     if (inMyRecipes.value) {
       await removeMyRecipe(recipe.value.id)
       inMyRecipes.value = false
-      Notify.create({ type: 'positive', message: 'Removed from my recipes' })
+      Notify.create({ type: 'positive', message: 'Eliminado de mis recetas' })
     } else {
       await addMyRecipe(recipe.value.id, recipe.value.recipeSourceType)
       inMyRecipes.value = true
-      Notify.create({ type: 'positive', message: 'Added to my recipes' })
+      Notify.create({ type: 'positive', message: 'Añadido a mis recetas' })
     }
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Failed to update my recipes'
+    const msg = e instanceof Error ? e.message : 'No se pudieron actualizar mis recetas'
     Notify.create({ type: 'negative', message: msg })
   } finally {
     addingToMyRecipes.value = false
@@ -201,9 +210,15 @@ onMounted(loadRecipe)
   margin: 0 auto;
   padding: 16px;
 }
-.recipe-detail-img {
-  border-radius: 12px;
+.recipe-detail-card {
   overflow: hidden;
+}
+.recipe-detail-img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
 }
 .reduced-img {
   max-height: 200px;

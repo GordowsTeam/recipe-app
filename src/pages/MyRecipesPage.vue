@@ -1,13 +1,13 @@
 <template>
   <q-page class="q-pa-md">
     <div class="row items-center justify-between q-mb-md">
-      <div class="text-h5">My Recipes</div>
+      <div class="text-h5">Mis recetas</div>
       <q-btn
         v-if="isAuthenticated"
         unelevated
         color="primary"
         icon="add"
-        label="Create new recipe"
+        label="Crear nueva receta"
         no-caps
         @click="showCreateDialog = true"
       />
@@ -19,19 +19,19 @@
       </template>
       {{ error }}
       <template #action>
-        <q-btn flat dense label="Retry" @click="loadMyRecipes" />
+        <q-btn flat dense label="Reintentar" @click="loadMyRecipes" />
       </template>
     </q-banner>
 
     <div v-else-if="!isAuthenticated" class="text-body1 text-grey-7">
-      Sign in to see and manage your recipes.
+      Inicia sesión para ver y gestionar tus recetas.
     </div>
 
     <template v-else>
       <q-spinner v-if="loading" size="48px" color="primary" class="q-mt-lg" />
       <template v-else>
         <div v-if="recipes.length === 0" class="text-body1 text-grey-7">
-          You haven't added any recipes yet. Create a new recipe or search and add from the recipe detail page.
+          Aún no has añadido recetas. Crea una nueva o búscala y añádela desde la página de detalle.
         </div>
         <recipe-list
           v-else
@@ -46,41 +46,41 @@
     <q-dialog v-model="showCreateDialog" persistent>
       <q-card class="create-dialog-card">
         <q-card-section>
-          <div class="text-h6">Create new recipe</div>
+          <div class="text-h6">Crear nueva receta</div>
         </q-card-section>
         <q-card-section class="q-pt-none">
           <q-form class="q-gutter-md" @submit="onCreateRecipe">
             <q-input
               v-model="createForm.name"
               outlined
-              label="Recipe name *"
-              :rules="[(v) => !!v?.trim() || 'Name is required']"
+              label="Nombre de la receta *"
+              :rules="[(v) => !!v?.trim() || 'El nombre es obligatorio']"
               lazy-rules
             />
             <q-input
               v-model="createForm.description"
               outlined
               type="textarea"
-              label="Description (optional)"
+              label="Descripción (opcional)"
               rows="2"
             />
             <div>
-              <div class="text-subtitle2 q-mb-xs">Ingredients (one per line)</div>
+              <div class="text-subtitle2 q-mb-xs">Ingredientes (uno por línea)</div>
               <q-input
                 v-model="createForm.ingredientsText"
                 outlined
                 type="textarea"
-                placeholder="e.g. 2 cups flour&#10;1 cup sugar"
+                placeholder="p. ej. 2 tazas de harina&#10;1 taza de azúcar"
                 rows="4"
               />
             </div>
             <div>
-              <div class="text-subtitle2 q-mb-xs">Directions (one step per line)</div>
+              <div class="text-subtitle2 q-mb-xs">Instrucciones (un paso por línea)</div>
               <q-input
                 v-model="createForm.directionsText"
                 outlined
                 type="textarea"
-                placeholder="e.g. Mix dry ingredients&#10;Bake at 350°F for 30 min"
+                placeholder="p. ej. Mezcla los ingredientes secos&#10;Hornea a 180 °C durante 30 min"
                 rows="4"
               />
             </div>
@@ -89,7 +89,7 @@
                 v-model.number="createForm.totalTime"
                 outlined
                 type="number"
-                label="Total time (min)"
+                label="Tiempo total (min)"
                 min="0"
                 style="max-width: 140px"
               />
@@ -97,14 +97,14 @@
                 v-model.number="createForm.calories"
                 outlined
                 type="number"
-                label="Calories"
+                label="Calorías"
                 min="0"
                 style="max-width: 140px"
               />
             </div>
             <q-card-actions align="right" class="q-pt-md">
-              <q-btn flat label="Cancel" color="grey" v-close-popup />
-              <q-btn unelevated type="submit" color="primary" label="Create" :loading="creating" />
+              <q-btn flat label="Cancelar" color="grey" v-close-popup />
+              <q-btn unelevated type="submit" color="primary" label="Crear" :loading="creating" />
             </q-card-actions>
           </q-form>
         </q-card-section>
@@ -156,7 +156,7 @@ const loadMyRecipes = async () => {
     list.forEach(applyToRecipe)
     recipes.value = list
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Failed to load my recipes'
+    const msg = e instanceof Error ? e.message : 'No se pudieron cargar mis recetas'
     error.value = msg
   } finally {
     loading.value = false
@@ -167,9 +167,9 @@ const onRemoveFromMyRecipes = async (recipe: Recipe) => {
   try {
     await removeMyRecipe(recipe.id)
     recipes.value = recipes.value.filter((r) => r.id !== recipe.id)
-    Notify.create({ type: 'positive', message: 'Removed from my recipes' })
+    Notify.create({ type: 'positive', message: 'Eliminado de mis recetas' })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Failed to remove recipe'
+    const msg = e instanceof Error ? e.message : 'No se pudo eliminar la receta'
     Notify.create({ type: 'negative', message: msg })
   }
 }
@@ -177,7 +177,7 @@ const onRemoveFromMyRecipes = async (recipe: Recipe) => {
 const onCreateRecipe = async () => {
   const name = createForm.value.name?.trim()
   if (!name) {
-    Notify.create({ type: 'negative', message: 'Recipe name is required' })
+    Notify.create({ type: 'negative', message: 'El nombre de la receta es obligatorio' })
     return
   }
   const ingredients = createForm.value.ingredientsText
@@ -213,9 +213,9 @@ const onCreateRecipe = async () => {
       totalTime: 0,
       calories: 0
     }
-    Notify.create({ type: 'positive', message: 'Recipe created' })
+    Notify.create({ type: 'positive', message: 'Receta creada' })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Failed to create recipe'
+    const msg = e instanceof Error ? e.message : 'No se pudo crear la receta'
     Notify.create({ type: 'negative', message: msg })
   } finally {
     creating.value = false

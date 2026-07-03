@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-md">
-    <div class="text-h5 q-mb-md">Favorites</div>
+    <div class="text-h5 q-mb-md">Favoritos</div>
 
     <q-banner v-if="error" class="bg-negative text-white q-mb-md rounded-borders">
       <template #avatar>
@@ -8,19 +8,19 @@
       </template>
       {{ error }}
       <template #action>
-        <q-btn flat dense label="Retry" @click="loadFavorites" />
+        <q-btn flat dense label="Reintentar" @click="loadFavorites" />
       </template>
     </q-banner>
 
     <div v-else-if="!isAuthenticated" class="text-body1 text-grey-7">
-      Sign in to see your favorite recipes.
+      Inicia sesión para ver tus recetas favoritas.
     </div>
 
     <template v-else>
       <q-spinner v-if="loading" size="48px" color="primary" class="q-mt-lg" />
       <template v-else>
         <div v-if="recipes.length === 0" class="text-body1 text-grey-7">
-          You haven't added any favorites yet. Use the heart icon on a recipe to add it here.
+          Aún no tienes favoritos. Usa el icono del corazón en una receta para añadirla aquí.
         </div>
         <recipe-list v-else :recipes="recipes" @favorite-toggled="onFavoriteToggled" />
       </template>
@@ -59,7 +59,7 @@ const loadFavorites = async () => {
     list.forEach(applyToRecipe)
     recipes.value = list
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Failed to load favorites'
+    const msg = e instanceof Error ? e.message : 'No se pudieron cargar los favoritos'
     error.value = msg
   } finally {
     loading.value = false

@@ -2,7 +2,7 @@
   <div>
     <recipe-list-filters v-if="recipes.length > 0" class="q-mb-md" />
     <q-banner v-if="recipes.length > 0 && filteredRecipes.length === 0" class="bg-grey-3 rounded-borders q-mb-md">
-      No recipes match your filters. Try adjusting or clear filters.
+      Ninguna receta coincide con los filtros. Ajusta los filtros o bórralos.
     </q-banner>
     <!-- Loader Skeleton -->
     <div v-if="loading" class="recipe-list">
@@ -24,8 +24,8 @@
       >
         <div class="relative-position img-container">
           <q-img
-            v-if="recipe.images?.length"
-            :src="mainImageUrl(recipe.images)"
+            v-if="getRecipeMainImageUrl(recipe)"
+            :src="getRecipeMainImageUrl(recipe)"
             class="recipe-img"
           />
 
@@ -52,7 +52,7 @@
 
             <q-badge color="blue" transparent>
               <q-icon name="whatshot" size="16px" class="q-mr-xs" />
-              {{ recipe.calories }} cal
+              {{ recipe.calories }} kcal
             </q-badge>
           </div>
         </div>
@@ -107,14 +107,12 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Notify } from 'quasar'
-import type { Recipe, RecipeImage } from '../../interfaces/RecipeResponse'
+import type { Recipe } from '../../interfaces/RecipeResponse'
 import { useRecipeFavorites } from 'src/composables/useRecipeFavorites'
 import { useRecipeListFilters } from 'src/components/recipe-search/filters/useRecipeListFilters'
 import RecipeListFilters from 'src/components/recipe-search/filters/RecipeListFilters.vue'
 
-function mainImageUrl(images: Recipe['images']): string | undefined {
-  return images?.find((img: RecipeImage) => img.main)?.url
-}
+import { getRecipeMainImageUrl } from 'src/utils/recipeImages'
 
 const props = withDefaults(
   defineProps<{ recipes: Recipe[]; showRemoveFromMyRecipes?: boolean }>(),
@@ -131,9 +129,9 @@ const onToggleFavorite = async (recipe: Recipe) => {
   try {
     const newState = await toggleFavorite(recipe)
     emit('favorite-toggled', recipe, newState)
-    Notify.create({ type: 'positive', message: newState ? 'Added to favorites' : 'Removed from favorites' })
+    Notify.create({ type: 'positive', message: newState ? 'Añadido a favoritos' : 'Eliminado de favoritos' })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Failed to update favorite'
+    const msg = e instanceof Error ? e.message : 'No se pudo actualizar el favorito'
     Notify.create({ type: 'negative', message: msg })
   }
 }
@@ -168,11 +166,15 @@ const paginatedRecipes = computed(() => {
 const viewRecipe = (recipe: Recipe) => {
   const id = recipe.id ?? (recipe as { Id?: string }).Id
   if (!id) return
-  const sourceTypeId = '2'
+  const sourceTypeId =
+    recipe.recipeSourceType != null && recipe.recipeSourceType !== ''
+      ? String(recipe.recipeSourceType)
+      : '2'
   void router.push({
     name: 'recipe-detail',
     params: { id },
-    query: { sourceTypeId }
+    query: { sourceTypeId },
+    state: { imageUrl: getRecipeMainImageUrl(recipe) }
   })
 }
 
