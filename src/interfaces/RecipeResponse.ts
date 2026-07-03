@@ -31,5 +31,8 @@ export interface RecipeImage {
     cuisinTypes: string[]
     mealTypes: string[]
     directions: RecipeDirection[],
-    recipeSourceType: string
+    recipeSourceType: string,
+    description: string,
+    isSaved: boolean,
+    isFavorite: boolean
   }
