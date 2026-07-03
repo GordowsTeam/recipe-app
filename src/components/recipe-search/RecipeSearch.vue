@@ -1,6 +1,74 @@
 <template>
   <div class="q-pa-md">
 
+    <!-- SEARCH BAR -->
+    <div class="search-bar q-mb-lg">
+      <q-input
+        outlined
+        dense
+        v-model="searchText"
+        class="search-input"
+        :label="searchMode === 'ingredient' ? 'Añadir ingrediente' : 'Buscar receta'"
+        @keyup.enter="searchMode === 'ingredient' ? addIngredient() : triggerSearch()"
+      >
+        <template #prepend>
+          <q-btn-dropdown flat dense round icon="more_vert">
+            <q-list bordered separator>
+              <q-item clickable v-close-popup @click="searchMode = 'recipe'">
+                <q-item-section avatar>
+                  <q-icon name="restaurant_menu" />
+                </q-item-section>
+                <q-item-section>Por receta</q-item-section>
+              </q-item>
+
+              <q-item clickable v-close-popup @click="searchMode = 'ingredient'">
+                <q-item-section avatar>
+                  <q-icon name="spa" />
+                </q-item-section>
+                <q-item-section>Por ingrediente</q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
+        </template>
+
+        <template #append>
+          <q-btn
+            v-if="searchMode === 'ingredient'"
+            dense
+            flat
+            round
+            icon="add"
+            color="primary"
+            @click="addIngredient"
+          />
+          <q-btn
+            dense
+            flat
+            round
+            icon="search"
+            color="secondary"
+            @click="triggerSearch"
+          />
+        </template>
+      </q-input>
+
+      <div
+        v-if="searchMode === 'ingredient' && ingredientList.length"
+        class="ingredients-row"
+      >
+        <q-chip
+          v-for="i in ingredientList"
+          :key="i.name"
+          removable
+          color="grey-3"
+          text-color="black"
+          @remove="removeIngredient(i.name)"
+        >
+          {{ i.name }}
+        </q-chip>
+      </div>
+    </div>
+
     <!-- HOME SECTIONS (unchanged) -->
     <div v-if="recipes.length === 0" class="home-sections">
       <!-- ⭐ Recipes of the day (MODIFIED SECTION) -->
@@ -202,7 +270,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Notify } from 'quasar'
 import RecipeList from './RecipeList.vue'
@@ -218,12 +286,6 @@ import { getRecipeMainImageUrl } from 'src/utils/recipeImages'
 
 interface Ingredient {
   name: string
-}
-
-interface SearchEventDetail {
-  searchMode: 'recipe' | 'ingredient'
-  searchText: string
-  ingredientList: Ingredient[]
 }
 
 /* -------------------------
@@ -249,9 +311,21 @@ const isAuthenticated = computed(() => {
   return payload?.sub != null
 })
 
-let searchMode: 'recipe' | 'ingredient' = 'recipe'
-let searchText = ''
-let ingredientList: Ingredient[] = []
+const searchMode = ref<'recipe' | 'ingredient'>('recipe')
+const searchText = ref('')
+const ingredientList = ref<Ingredient[]>([])
+
+const addIngredient = () => {
+  if (!searchText.value.trim()) return
+  ingredientList.value.push({ name: searchText.value.trim() })
+  searchText.value = ''
+  Notify.create({ type: 'positive', message: 'Ingrediente añadido' })
+}
+
+const removeIngredient = (name: string) => {
+  ingredientList.value = ingredientList.value.filter(i => i.name !== name)
+  Notify.create({ type: 'info', message: 'Ingrediente eliminado' })
+}
 
 /* -------------------------
         API
@@ -319,9 +393,9 @@ const getRecipes = async (): Promise<void> => {
 
   try {
     const ingredients =
-      searchMode === 'ingredient'
-        ? ingredientList.map(i => i.name)
-        : [searchText.trim()]
+      searchMode.value === 'ingredient'
+        ? ingredientList.value.map(i => i.name)
+        : [searchText.value.trim()]
 
     const list = await getRecipesApi({ ingredients })
     list.forEach(applyToRecipe)
@@ -333,30 +407,20 @@ const getRecipes = async (): Promise<void> => {
   }
 }
 
-/* -------------------------
-     EVENT BRIDGE
---------------------------*/
-
-const handler = (event: Event) => {
-  const customEvent = event as CustomEvent<SearchEventDetail>
-
-  searchMode = customEvent.detail.searchMode
-  searchText = customEvent.detail.searchText
-  ingredientList = customEvent.detail.ingredientList
-
+const triggerSearch = () => {
   void getRecipes()
 }
 
 onMounted(() => {
-  window.addEventListener('trigger-recipe-search', handler)
   void loadSectionRecipes()
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('trigger-recipe-search', handler)
 })
 </script>
 <style scoped>
+.search-bar {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
 .search-input {
   max-width: 400px;
   width: 100%;

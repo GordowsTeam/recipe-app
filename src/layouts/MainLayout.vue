@@ -1,258 +1,88 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header elevated class="bg-white text-dark">
-      <q-toolbar class="items-start">
-
-        <!-- MENU BUTTON -->
-        <q-btn
-          flat
-          dense
-          round
-          icon="menu"
-          @click="leftDrawerOpen = !leftDrawerOpen"
-          class="q-mr-sm"
-        />
-
-        <!-- LEFT BLOCK: LOGO + SEARCH -->
-        <div class="row items-center no-wrap q-gutter-md">
-
-          <!-- LOGO / BRAND -->
-          <q-toolbar-title class="text-primary text-weight-bold">
-            NUMA
-          </q-toolbar-title>
-
-          <!-- SEARCH + CHIPS -->
-          <div class="search-wrapper">
-
-            <!-- SEARCH BAR -->
-            <q-input
-              outlined
-              dense
-              v-model="searchText"
-              :label="searchMode === 'ingredient' ? 'Añadir ingrediente' : 'Buscar receta'"
-              @keyup.enter="searchMode === 'ingredient' ? addIngredient() : triggerSearch()"
-            >
-              <template #prepend>
-                <q-btn-dropdown flat dense round icon="more_vert">
-                  <q-list bordered separator>
-                    <q-item clickable v-close-popup @click="searchMode = 'recipe'">
-                      <q-item-section avatar>
-                        <q-icon name="restaurant_menu" />
-                      </q-item-section>
-                      <q-item-section>Por receta</q-item-section>
-                    </q-item>
-
-                    <q-item clickable v-close-popup @click="searchMode = 'ingredient'">
-                      <q-item-section avatar>
-                        <q-icon name="spa" />
-                      </q-item-section>
-                      <q-item-section>Por ingrediente</q-item-section>
-                    </q-item>
-                  </q-list>
-                </q-btn-dropdown>
-              </template>
-
-              <template #append>
-                <q-btn
-                  v-if="searchMode === 'ingredient'"
-                  dense
-                  flat
-                  round
-                  icon="add"
-                  color="primary"
-                  @click="addIngredient"
-                />
-                <q-btn
-                  dense
-                  flat
-                  round
-                  icon="search"
-                  color="secondary"
-                  @click="triggerSearch"
-                />
-              </template>
-            </q-input>
-
-            <!-- INGREDIENT CHIPS -->
-            <div
-              v-if="searchMode === 'ingredient' && ingredientList.length"
-              class="ingredients-row"
-            >
-              <q-chip
-                v-for="i in ingredientList"
-                :key="i.name"
-                removable
-                color="grey-3"
-                text-color="black"
-                @remove="removeIngredient(i.name)"
-              >
-                {{ i.name }}
-              </q-chip>
-            </div>
-          </div>
-        </div>
-
-        <!-- SPACER -->
-        <q-space />
-
-        <!-- NAV OPTIONS -->
-        <div v-if="isAuthenticated" class="row items-center q-gutter-sm">
-          <q-btn flat round icon="favorite" @click="goTo('favorites')" />
-          <q-btn flat round icon="restaurant_menu" @click="goTo('my-recipes')" />
-          <q-btn flat round icon="upload" @click="goTo('upload-recipe')" />
-
-          <q-btn flat round icon="account_circle">
-            <q-menu anchor="bottom right" self="top right">
-              <q-list style="min-width: 150px">
-                <q-item clickable @click="goTo('profile')">
-                  <q-item-section>Perfil</q-item-section>
-                </q-item>
-                <q-item clickable @click="goTo('settings')">
-                  <q-item-section>Configuración</q-item-section>
-                </q-item>
-                <q-separator />
-                <q-item clickable @click="handleLogout">
-                  <q-item-section class="text-red">Cerrar sesión</q-item-section>
-                </q-item>
-              </q-list>
-            </q-menu>
-          </q-btn>
-        </div>
-
-        <q-btn
-          v-else
-          label="Iniciar sesión"
-          color="primary"
-          flat
-          @click="goTo('login')"
-        />
-      </q-toolbar>
-    </q-header>
-
     <q-drawer
-      v-model="leftDrawerOpen"
+      v-if="$q.screen.gt.sm"
+      :model-value="true"
+      :width="200"
       show-if-above
       bordered
-      class="bg-grey-1"
+      persistent
     >
-      <q-list>
-        <q-item-label header class="text-grey-8">
-          Navegación
-        </q-item-label>
-        <q-item clickable v-ripple @click="goTo('home')">
-          <q-item-section avatar>
-            <q-icon name="home" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Inicio</q-item-label>
-            <q-item-label caption>Explorar recetas</q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-item clickable v-ripple @click="goTo('favorites')" v-if="isAuthenticated">
-          <q-item-section avatar>
-            <q-icon name="favorite" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Favoritos</q-item-label>
-            <q-item-label caption>Tus recetas guardadas</q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-item clickable v-ripple @click="goTo('my-recipes')" v-if="isAuthenticated">
-          <q-item-section avatar>
-            <q-icon name="restaurant_menu" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Mis recetas</q-item-label>
-            <q-item-label caption>Tus recetas</q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-item clickable v-ripple @click="goTo('upload-recipe')" v-if="isAuthenticated">
-          <q-item-section avatar>
-            <q-icon name="upload" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Subir receta</q-item-label>
-            <q-item-label caption>Comparte tu receta</q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-separator spaced />
-        <q-item-label header class="text-grey-8" v-if="isAuthenticated">
-          Cuenta
-        </q-item-label>
-        <q-item clickable v-ripple @click="goTo('profile')" v-if="isAuthenticated">
-          <q-item-section avatar>
-            <q-icon name="account_circle" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Perfil</q-item-label>
-            <q-item-label caption>Ver tu perfil</q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-item clickable v-ripple @click="goTo('settings')" v-if="isAuthenticated">
-          <q-item-section avatar>
-            <q-icon name="settings" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Configuración</q-item-label>
-            <q-item-label caption>Ajustes de la aplicación</q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-separator spaced v-if="isAuthenticated" />
-        <q-item clickable v-ripple @click="handleLogout" v-if="isAuthenticated">
-          <q-item-section avatar>
-            <q-icon name="logout" color="red" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label class="text-red">Cerrar sesión</q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-item clickable v-ripple @click="goTo('login')" v-if="!isAuthenticated">
-          <q-item-section avatar>
-            <q-icon name="login" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Iniciar sesión</q-item-label>
-            <q-item-label caption>Accede a tu cuenta</q-item-label>
-          </q-item-section>
-        </q-item>
-      </q-list>
+      <SidebarNav :user="sidebarUser" @logout="handleLogout" />
     </q-drawer>
 
     <q-page-container>
       <router-view v-slot="{ Component }">
-        <keep-alive :include="['MySearchPage']">
+        <keep-alive :include="['MySearchPage', 'HomePage']">
           <component :is="Component" />
         </keep-alive>
       </router-view>
     </q-page-container>
+
+    <q-footer v-if="$q.screen.lt.md" bordered class="bg-white">
+      <q-tabs
+        indicator-color="primary"
+        active-color="primary"
+        inactive-color="grey-7"
+        dense
+      >
+        <q-route-tab
+          v-for="item in navItems"
+          :key="item.name"
+          :to="{ name: item.name }"
+          :icon="item.icon"
+          :label="item.label"
+        />
+        <q-tab icon="account_circle" label="Cuenta">
+          <q-menu anchor="top end" self="bottom end">
+            <q-list style="min-width: 180px">
+              <q-item clickable v-close-popup :to="{ name: 'profile' }">
+                <q-item-section>Perfil</q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup :to="{ name: 'my-recipes' }">
+                <q-item-section>Mis recetas</q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup :to="{ name: 'favorites' }">
+                <q-item-section>Favoritos</q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup :to="{ name: 'upload-recipe' }">
+                <q-item-section>Subir receta</q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup :to="{ name: 'settings' }">
+                <q-item-section>Configuración</q-item-section>
+              </q-item>
+              <q-separator />
+              <q-item clickable v-close-popup @click="handleLogout">
+                <q-item-section class="text-red">Cerrar sesión</q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-tab>
+      </q-tabs>
+    </q-footer>
   </q-layout>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { Notify } from 'quasar'
+import { useRouter } from 'vue-router'
 import { clearPkceVerifier, logout as cognitoLogout, parseJwt, refreshTokens } from 'boot/cognito'
 import { useRecipeFavorites } from 'src/composables/useRecipeFavorites'
+import SidebarNav from 'src/components/common/SidebarNav.vue'
+import { mockUser } from 'src/mocks/home.mock'
 
-interface Ingredient {
-  name: string
-}
-
-interface SearchEventDetail {
-  searchMode: 'recipe' | 'ingredient'
-  searchText: string
-  ingredientList: Ingredient[]
-}
-
-const route = useRoute()
 const router = useRouter()
-watch(() => route.path, () => {
-  token.value = localStorage.getItem('id_token')
-}, { immediate: false })
-const goTo = (routeName: string) => {
-  router.push({ name: routeName }).catch(() => {})
-}
+
+const navItems = [
+  { name: 'home', label: 'Inicio', icon: 'home' },
+  { name: 'inventory', label: 'Inventario', icon: 'kitchen' },
+  { name: 'recipes', label: 'Recetas', icon: 'menu_book' },
+  { name: 'week', label: 'Semana', icon: 'calendar_month' },
+  { name: 'shopping', label: 'Compras', icon: 'shopping_cart' },
+]
+
+// Placeholder hasta integrar el usuario real de la casa (ver docs/Numa_Features_Context.md)
+const sidebarUser = mockUser
 
 const clearAuthTokens = (): void => {
   localStorage.removeItem('access_token')
@@ -285,38 +115,6 @@ watch(
   },
   { immediate: true }
 )
-
-/* DRAWER STATE */
-const leftDrawerOpen = ref(false)
-
-/* SEARCH STATE */
-const searchMode = ref<'recipe' | 'ingredient'>('recipe')
-const searchText = ref('')
-const ingredientList = ref<Ingredient[]>([])
-
-const addIngredient = () => {
-  if (!searchText.value.trim()) return
-  ingredientList.value.push({ name: searchText.value.trim() })
-  searchText.value = ''
-  Notify.create({ type: 'positive', message: 'Ingrediente añadido' })
-}
-
-const removeIngredient = (name: string) => {
-  ingredientList.value = ingredientList.value.filter(i => i.name !== name)
-  Notify.create({ type: 'info', message: 'Ingrediente eliminado' })
-}
-
-const triggerSearch = () => {
-  const detail: SearchEventDetail = {
-    searchMode: searchMode.value,
-    searchText: searchText.value,
-    ingredientList: ingredientList.value
-  }
-
-  window.dispatchEvent(
-    new CustomEvent<SearchEventDetail>('trigger-recipe-search', { detail })
-  )
-}
 
 /* IDLE + REFRESH */
 let idleTimeout: ReturnType<typeof setTimeout>
@@ -352,16 +150,3 @@ onBeforeUnmount(() => {
   activityEvents.forEach(e => window.removeEventListener(e, resetIdleTimer))
 })
 </script>
-
-<style scoped>
-.search-wrapper {
-  width: 380px;
-}
-
-.ingredients-row {
-  margin-top: 6px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-</style>

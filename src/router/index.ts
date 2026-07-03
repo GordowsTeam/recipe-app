@@ -73,7 +73,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     if (to.path === '/auth/callback') {
       next()
     } else if (to.path === '/login' && isAuthenticated) {
-      next('/my-search')
+      next('/')
     } else if (to.path !== '/login' && !isAuthenticated) {
       next('/login')
     } else {

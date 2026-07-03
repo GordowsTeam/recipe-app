@@ -58,7 +58,7 @@ onMounted(async () => {
       console.warn('[Cognito] Signed in but id_token could not be parsed')
     }
     clearPkceVerifier()
-    await router.replace('/my-search')
+    await router.replace('/')
   } catch (err) {
     console.error('Auth error:', err)
     clearPkceVerifier()
