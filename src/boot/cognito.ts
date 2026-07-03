@@ -1,10 +1,35 @@
 const domain = import.meta.env.VITE_AWS_COGNITO_DOMAIN
 const clientId = import.meta.env.VITE_AWS_COGNITO_CLIENT_ID
 const redirectUri = import.meta.env.VITE_AWS_COGNITO_REDIRECT_URI
+const pkceVerifierKey = 'pkce_code_verifier'
 
-export const login = (): void => {
-  window.location.href =
-    `${domain}/login?client_id=${clientId}&response_type=code&scope=email+openid&redirect_uri=${redirectUri}`
+const randomString = (length: number): string => {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~'
+  const values = new Uint8Array(length)
+  crypto.getRandomValues(values)
+  return Array.from(values, (v) => charset[v % charset.length]).join('')
+}
+
+const toBase64Url = (bytes: Uint8Array): string => {
+  const base64 = btoa(String.fromCharCode(...bytes))
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+}
+
+const sha256 = async (value: string): Promise<string> => {
+  const data = new TextEncoder().encode(value)
+  const hash = await crypto.subtle.digest('SHA-256', data)
+  return toBase64Url(new Uint8Array(hash))
+}
+
+export const login = async (): Promise<void> => {
+  const verifier = randomString(96)
+  const challenge = await sha256(verifier)
+  sessionStorage.setItem(pkceVerifierKey, verifier)
+
+  const loginUrl =
+    `${domain}/login?client_id=${clientId}&response_type=code&scope=email+openid&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge_method=S256&code_challenge=${encodeURIComponent(challenge)}`
+
+  window.location.href = loginUrl
 }
 
 export const logout = (): void => {
@@ -28,6 +53,14 @@ export const parseJwt = (token: string | null): JwtPayload | null => {
   } catch {
     return null
   }
+}
+
+export const getPkceVerifier = (): string | null => {
+  return sessionStorage.getItem(pkceVerifierKey)
+}
+
+export const clearPkceVerifier = (): void => {
+  sessionStorage.removeItem(pkceVerifierKey)
 }
 
 export async function refreshTokens(): Promise<{

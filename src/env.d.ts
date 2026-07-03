@@ -3,6 +3,9 @@
 declare namespace ImportMeta {
   interface Env {
     VITE_API_URL: string
+    VITE_AWS_COGNITO_DOMAIN: string
+    VITE_AWS_COGNITO_CLIENT_ID: string
+    VITE_AWS_COGNITO_REDIRECT_URI: string
   }
 }
 
