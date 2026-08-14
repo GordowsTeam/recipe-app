@@ -69,7 +69,7 @@ import { useRouter } from 'vue-router'
 import { clearPkceVerifier, logout as cognitoLogout, parseJwt, refreshTokens } from 'boot/cognito'
 import { useRecipeFavorites } from 'src/composables/useRecipeFavorites'
 import SidebarNav from 'src/components/common/SidebarNav.vue'
-import { mockUser } from 'src/mocks/home.mock'
+import { mockHomeData } from 'src/mocks/handlers/home.handler'
 
 const router = useRouter()
 
@@ -82,7 +82,7 @@ const navItems = [
 ]
 
 // Placeholder hasta integrar el usuario real de la casa (ver docs/Numa_Features_Context.md)
-const sidebarUser = mockUser
+const sidebarUser = mockHomeData.user
 
 const clearAuthTokens = (): void => {
   localStorage.removeItem('access_token')
