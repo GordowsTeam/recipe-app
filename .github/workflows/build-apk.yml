@@ -45,11 +45,10 @@ jobs:
 
   build-apk:
     name: Build APK
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     needs: tests
     environment: ${{
-      startsWith(github.ref, 'refs/heads/release/') && 'test' ||
+      startsWith(github.ref, 'refs/pull/') && 'test' ||
       github.ref == 'refs/heads/main' && 'prod' }}
     env:
       KEYSTORE_FILE: my-release-key.keystore
@@ -64,10 +63,21 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Show Enviroment
+        run: echo "${{github.ref}} My enviroment is ${{startsWith(github.ref, 'refs/pull/') && 'test' || github.ref == 'refs/heads/main' && 'prod' }} $API_URL"
+
+      - name: Create .env
+        run: |
+          echo "VITE_API_URL=$API_URL" >> .env
+          echo "VITE_AWS_COGNITO_DOMAIN=$AWS_COGNITO_DOMAIN" >> .env
+          echo "VITE_AWS_COGNITO_CLIENT_ID=$AWS_COGNITO_CLIENT_ID" >> .env
+          echo "VITE_AWS_COGNITO_REDIRECT_URI=$AWS_COGNITO_REDIRECT_URI" >> .env
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 22.13.x
+          cache: 'npm'
 
       - name: Setup Java
         uses: actions/setup-java@v3
@@ -80,9 +90,9 @@ jobs:
           yarn install
           npm install -g @quasar/cli
 
-      - name: Recreate keystore file from secret
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > $KEYSTORE_FILE
+      # - name: Recreate keystore file from secret
+      #   run: |
+      #     echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > $KEYSTORE_FILE
 
       - name: Add Android SDK
         uses: android-actions/setup-android@v3
@@ -162,3 +172,4 @@ jobs:
       #   with:
       #     name: apk-signed
       #     path: app-release-signed.apk
+      #
