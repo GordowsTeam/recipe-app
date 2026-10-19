@@ -48,10 +48,8 @@ export interface HomeUser {
   plan: 'free' | 'pro' | 'family'
 }
 
-export interface HomeData {
+// Respuesta de GET /api/home/greeting — lo primero que se carga al entrar
+export interface HomeGreeting {
   user: HomeUser
   date: string
-  alerts: AlertItem[]
-  meals: MealSlot[]
-  houseMembers: HouseMember[]
 }

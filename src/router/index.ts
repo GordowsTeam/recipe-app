@@ -4,8 +4,11 @@ import {
   createRouter,
   createWebHashHistory,
   createWebHistory,
+  type RouteRecordNameGeneric,
 } from 'vue-router';
 import routes from './routes';
+import { isPageEnabled } from 'src/composables/useFeatureFlags';
+import { mainNavItems, pageForRoute } from 'src/config/navigation';
 
 interface JwtPayload {
   exp?: number
@@ -16,6 +19,12 @@ const clearAuthTokens = (): void => {
   localStorage.removeItem('id_token')
   localStorage.removeItem('refresh_token')
   localStorage.removeItem('expires_at')
+}
+
+const isPageDisabled = (routeName: RouteRecordNameGeneric | null | undefined): boolean => {
+  if (typeof routeName !== 'string') return false
+  const page = pageForRoute(routeName)
+  return page !== undefined && !isPageEnabled(page)
 }
 
 const hasValidSession = (): boolean => {
@@ -76,6 +85,10 @@ export default defineRouter(function (/* { store, ssrContext } */) {
       next('/')
     } else if (to.path !== '/login' && !isAuthenticated) {
       next('/login')
+    } else if (isPageDisabled(to.name)) {
+      // Página apagada por feature flag: a la primera página activa del menú
+      const fallback = mainNavItems.find((item) => isPageEnabled(item.page))
+      next({ name: fallback?.routeName ?? 'page-unavailable' })
     } else {
       next()
     }

@@ -7,11 +7,11 @@
     <q-list class="col">
       <q-item
         v-for="item in navItems"
-        :key="item.name"
+        :key="item.routeName"
         clickable
         v-ripple
-        :to="{ name: item.name }"
-        :active="route.name === item.name"
+        :to="{ name: item.routeName }"
+        :active="route.name === item.routeName"
         active-class="text-primary bg-blue-1"
       >
         <q-item-section avatar>
@@ -36,22 +36,16 @@
 
       <q-menu anchor="top end" self="bottom end">
         <q-list style="min-width: 180px">
-          <q-item clickable v-close-popup :to="{ name: 'profile' }">
-            <q-item-section>Perfil</q-item-section>
+          <q-item
+            v-for="item in accountItems"
+            :key="item.routeName"
+            clickable
+            v-close-popup
+            :to="{ name: item.routeName }"
+          >
+            <q-item-section>{{ item.label }}</q-item-section>
           </q-item>
-          <q-item clickable v-close-popup :to="{ name: 'my-recipes' }">
-            <q-item-section>Mis recetas</q-item-section>
-          </q-item>
-          <q-item clickable v-close-popup :to="{ name: 'favorites' }">
-            <q-item-section>Favoritos</q-item-section>
-          </q-item>
-          <q-item clickable v-close-popup :to="{ name: 'upload-recipe' }">
-            <q-item-section>Subir receta</q-item-section>
-          </q-item>
-          <q-item clickable v-close-popup :to="{ name: 'settings' }">
-            <q-item-section>Configuración</q-item-section>
-          </q-item>
-          <q-separator />
+          <q-separator v-if="accountItems.length" />
           <q-item clickable v-close-popup @click="$emit('logout')">
             <q-item-section class="text-red">Cerrar sesión</q-item-section>
           </q-item>
@@ -64,6 +58,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { accountNavItems, mainNavItems } from 'src/config/navigation'
+import { isPageEnabled } from 'src/composables/useFeatureFlags'
 
 interface SidebarNavUser {
   name: string
@@ -77,13 +73,9 @@ defineEmits<{ logout: [] }>()
 
 const route = useRoute()
 
-const navItems = [
-  { name: 'home', label: 'Inicio', icon: 'home' },
-  { name: 'inventory', label: 'Inventario', icon: 'kitchen' },
-  { name: 'recipes', label: 'Recetas', icon: 'menu_book' },
-  { name: 'week', label: 'Semana', icon: 'calendar_month' },
-  { name: 'shopping', label: 'Compras', icon: 'shopping_cart' },
-]
+// Solo las páginas habilitadas por feature flag (src/config/flags.*.ts → pages)
+const navItems = mainNavItems.filter((item) => isPageEnabled(item.page))
+const accountItems = accountNavItems.filter((item) => isPageEnabled(item.page))
 
 const PLAN_LABEL: Record<SidebarNavUser['plan'], string> = {
   free: 'Plan Free',

@@ -57,6 +57,13 @@ const routes: RouteRecordRaw[] = [
         name: 'settings',
         component: () => import('pages/ComingSoon.vue'),
         meta: { title: 'Configuración', message: 'Ajustes y preferencias de la aplicación.' }
+      },
+      {
+        // Destino cuando todas las páginas del menú están apagadas por feature flag
+        path: 'unavailable',
+        name: 'page-unavailable',
+        component: () => import('pages/ComingSoon.vue'),
+        meta: { title: 'Sin secciones disponibles', message: 'No hay secciones activas en este momento.' }
       }
     ],
   },

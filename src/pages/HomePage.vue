@@ -8,28 +8,45 @@
       Sin conexión. Estás viendo la última información disponible.
     </q-banner>
 
-    <!-- LOADING -->
-    <div v-if="isLoading" class="column items-center q-py-xl">
-      <q-spinner color="primary" size="40px" />
-      <div class="text-body2 text-grey-7 q-mt-sm">Cargando tu día...</div>
-    </div>
+    <!-- Cada sección tiene su endpoint, su flag y sus propios estados
+         (cargando / error / vacío / éxito); una falla no tumba a las demás. -->
 
-    <!-- ERROR -->
-    <div v-else-if="isError" class="column items-center q-py-xl">
-      <q-icon name="error_outline" color="negative" size="40px" />
-      <div class="text-body1 q-mt-sm">No pudimos cargar tu home</div>
-      <div class="text-body2 text-grey-7 q-mb-md">Revisa tu conexión e intenta de nuevo</div>
-      <q-btn outline no-caps color="primary" label="Reintentar" @click="refetch()" />
-    </div>
+    <!-- SALUDO · GET /api/home/greeting -->
+    <template v-if="showGreeting">
+      <q-skeleton
+        v-if="greeting.isLoading.value"
+        type="text"
+        width="260px"
+        height="40px"
+        class="q-mb-md"
+      />
+      <div v-else class="q-mb-md">
+        <div class="text-h5">
+          {{ greetingText
+          }}<template v-if="greeting.data.value">, {{ greeting.data.value.user.name }}</template>
+        </div>
+        <div v-if="greeting.isError.value" class="text-caption text-grey-7">
+          No pudimos cargar tus datos ·
+          <a href="#" class="text-primary" @click.prevent="greeting.refetch()">Reintentar</a>
+        </div>
+      </div>
+    </template>
 
-    <!-- ÉXITO -->
-    <template v-else-if="data">
-      <!-- HEADER / SALUDO -->
-      <div class="text-h5 q-mb-md">{{ greeting }}, {{ data.user.name }}</div>
-
-      <!-- ALERTAS -->
-      <div v-if="data.alerts.length" class="row q-col-gutter-md q-mb-md">
-        <div v-for="alert in data.alerts" :key="alert.id" class="col-12 col-sm-6">
+    <!-- AVISOS · GET /api/home/alerts -->
+    <template v-if="showAlerts">
+      <div v-if="alerts.isLoading.value" class="row q-col-gutter-md q-mb-md">
+        <div v-for="n in 2" :key="n" class="col-12 col-sm-6">
+          <q-skeleton height="72px" />
+        </div>
+      </div>
+      <SectionError
+        v-else-if="alerts.isError.value"
+        message="No pudimos cargar tus avisos"
+        class="q-mb-md"
+        @retry="alerts.refetch()"
+      />
+      <div v-else-if="alerts.data.value?.length" class="row q-col-gutter-md q-mb-md">
+        <div v-for="alert in alerts.data.value" :key="alert.id" class="col-12 col-sm-6">
           <AlertBanner
             :type="alert.type"
             :title="alert.title"
@@ -38,11 +55,25 @@
           />
         </div>
       </div>
+      <!-- VACÍO: sin avisos no se muestra nada que distraiga -->
+    </template>
 
-      <!-- HOY -->
+    <!-- HOY · GET /api/home/meals -->
+    <template v-if="showMeals">
       <div class="text-subtitle1 text-weight-medium q-mb-sm">Hoy</div>
-      <div v-if="data.meals.length" class="row q-col-gutter-md q-mb-md">
-        <div v-for="meal in data.meals" :key="meal.id" class="col-12 col-sm-4">
+      <div v-if="meals.isLoading.value" class="row q-col-gutter-md q-mb-md">
+        <div v-for="n in 3" :key="n" class="col-12 col-sm-4">
+          <q-skeleton height="140px" />
+        </div>
+      </div>
+      <SectionError
+        v-else-if="meals.isError.value"
+        message="No pudimos cargar las comidas de hoy"
+        class="q-mb-md"
+        @retry="meals.refetch()"
+      />
+      <div v-else-if="meals.data.value?.length" class="row q-col-gutter-md q-mb-md">
+        <div v-for="meal in meals.data.value" :key="meal.id" class="col-12 col-sm-4">
           <MealSlotCard
             :type="meal.type"
             :status="meal.status"
@@ -55,14 +86,24 @@
         </div>
       </div>
       <!-- VACÍO -->
-      <div v-else class="text-body2 text-grey-6 q-mb-md">
-        Aún no has planeado nada para hoy.
-      </div>
+      <div v-else class="text-body2 text-grey-6 q-mb-md">Aún no has planeado nada para hoy.</div>
+    </template>
 
-      <!-- CASA -->
+    <!-- CASA · GET /api/home/house-members -->
+    <template v-if="showHouseMembers">
       <div class="text-subtitle1 text-weight-medium q-mb-sm">Casa</div>
-      <div v-if="data.houseMembers.length" class="row q-col-gutter-md">
-        <div v-for="member in data.houseMembers" :key="member.id" class="col-12 col-sm-6">
+      <div v-if="houseMembers.isLoading.value" class="row q-col-gutter-md">
+        <div v-for="n in 2" :key="n" class="col-12 col-sm-6">
+          <q-skeleton height="72px" />
+        </div>
+      </div>
+      <SectionError
+        v-else-if="houseMembers.isError.value"
+        message="No pudimos cargar a tu casa"
+        @retry="houseMembers.refetch()"
+      />
+      <div v-else-if="houseMembers.data.value?.length" class="row q-col-gutter-md">
+        <div v-for="member in houseMembers.data.value" :key="member.id" class="col-12 col-sm-6">
           <HouseMemberCard
             :name="member.name"
             :initial="member.initial"
@@ -87,11 +128,27 @@ import AlertBanner from 'src/components/common/AlertBanner.vue'
 import MealSlotCard from 'src/components/common/MealSlotCard.vue'
 import type { MealType } from 'src/components/common/MealSlotCard.vue'
 import HouseMemberCard from 'src/components/common/HouseMemberCard.vue'
-import { useHomeData } from 'src/composables/useHomeData'
+import SectionError from 'src/components/common/SectionError.vue'
+import {
+  useHomeAlerts,
+  useHomeGreeting,
+  useHomeMeals,
+  useHouseMembers,
+} from 'src/composables/useHomeData'
+import { isEnabled, useFeatureFlags } from 'src/composables/useFeatureFlags'
 
 defineOptions({ name: 'HomePage' })
 
-const { data, isLoading, isError, refetch } = useHomeData()
+const flags = useFeatureFlags()
+const showGreeting = isEnabled(flags.home.welcomeMessage)
+const showAlerts = isEnabled(flags.home.alerts)
+const showMeals = isEnabled(flags.home.mealSlots)
+const showHouseMembers = isEnabled(flags.home.houseMembers)
+
+const greeting = useHomeGreeting()
+const alerts = useHomeAlerts()
+const meals = useHomeMeals()
+const houseMembers = useHouseMembers()
 
 const isOnline = ref(navigator.onLine)
 const updateOnlineStatus = () => {
@@ -106,7 +163,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('offline', updateOnlineStatus)
 })
 
-const greeting = computed(() => {
+const greetingText = computed(() => {
   const hour = new Date().getHours()
   if (hour < 12) return 'Buenos días'
   if (hour < 19) return 'Buenas tardes'

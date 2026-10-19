@@ -2,6 +2,7 @@
 
 declare namespace ImportMeta {
   interface Env {
+    VITE_ENV?: 'test' | 'staging' | 'production'
     VITE_API_URL: string
     VITE_AWS_COGNITO_DOMAIN: string
     VITE_AWS_COGNITO_CLIENT_ID: string

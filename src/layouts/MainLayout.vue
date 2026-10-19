@@ -28,30 +28,24 @@
       >
         <q-route-tab
           v-for="item in navItems"
-          :key="item.name"
-          :to="{ name: item.name }"
+          :key="item.routeName"
+          :to="{ name: item.routeName }"
           :icon="item.icon"
           :label="item.label"
         />
         <q-tab icon="account_circle" label="Cuenta">
           <q-menu anchor="top end" self="bottom end">
             <q-list style="min-width: 180px">
-              <q-item clickable v-close-popup :to="{ name: 'profile' }">
-                <q-item-section>Perfil</q-item-section>
+              <q-item
+                v-for="item in accountItems"
+                :key="item.routeName"
+                clickable
+                v-close-popup
+                :to="{ name: item.routeName }"
+              >
+                <q-item-section>{{ item.label }}</q-item-section>
               </q-item>
-              <q-item clickable v-close-popup :to="{ name: 'my-recipes' }">
-                <q-item-section>Mis recetas</q-item-section>
-              </q-item>
-              <q-item clickable v-close-popup :to="{ name: 'favorites' }">
-                <q-item-section>Favoritos</q-item-section>
-              </q-item>
-              <q-item clickable v-close-popup :to="{ name: 'upload-recipe' }">
-                <q-item-section>Subir receta</q-item-section>
-              </q-item>
-              <q-item clickable v-close-popup :to="{ name: 'settings' }">
-                <q-item-section>Configuración</q-item-section>
-              </q-item>
-              <q-separator />
+              <q-separator v-if="accountItems.length" />
               <q-item clickable v-close-popup @click="handleLogout">
                 <q-item-section class="text-red">Cerrar sesión</q-item-section>
               </q-item>
@@ -60,29 +54,37 @@
         </q-tab>
       </q-tabs>
     </q-footer>
+
+    <component :is="DevPanel" v-if="DevPanel" />
   </q-layout>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { clearPkceVerifier, logout as cognitoLogout, parseJwt, refreshTokens } from 'boot/cognito'
 import { useRecipeFavorites } from 'src/composables/useRecipeFavorites'
 import SidebarNav from 'src/components/common/SidebarNav.vue'
-import { mockHomeData } from 'src/mocks/handlers/home.handler'
+import { accountNavItems, mainNavItems } from 'src/config/navigation'
+import { isPageEnabled } from 'src/composables/useFeatureFlags'
+import { mockHomeGreeting } from 'src/mocks/handlers/home.handler'
 
 const router = useRouter()
 
-const navItems = [
-  { name: 'home', label: 'Inicio', icon: 'home' },
-  { name: 'inventory', label: 'Inventario', icon: 'kitchen' },
-  { name: 'recipes', label: 'Recetas', icon: 'menu_book' },
-  { name: 'week', label: 'Semana', icon: 'calendar_month' },
-  { name: 'shopping', label: 'Compras', icon: 'shopping_cart' },
-]
+// Panel de flags solo en test. La condición usa import.meta.env directamente
+// para que Vite la resuelva en build y el chunk del DevPanel no exista en
+// staging/producción.
+const DevPanel =
+  import.meta.env.VITE_ENV === 'test'
+    ? defineAsyncComponent(() => import('src/components/dev/DevPanel.vue'))
+    : null
+
+// Solo las páginas habilitadas por feature flag (src/config/flags.*.ts → pages)
+const navItems = mainNavItems.filter((item) => isPageEnabled(item.page))
+const accountItems = accountNavItems.filter((item) => isPageEnabled(item.page))
 
 // Placeholder hasta integrar el usuario real de la casa (ver docs/Numa_Features_Context.md)
-const sidebarUser = mockHomeData.user
+const sidebarUser = mockHomeGreeting.user
 
 const clearAuthTokens = (): void => {
   localStorage.removeItem('access_token')
